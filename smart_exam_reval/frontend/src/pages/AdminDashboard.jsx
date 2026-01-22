@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useRef } from 'react';
 import { supabase } from '../supabase';
 import api from '../api/axios'; // Centralized API client with global token interceptor
 import { User, BookOpen, Plus, Trash2, Search, Shield, Building, Upload, FileText, Edit2, LayoutDashboard, Users, X } from 'lucide-react';
@@ -10,6 +10,8 @@ const AdminDashboard = () => {
     const [subView, setSubView] = useState('faculty'); // 'faculty' or 'subjects'
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
+    const fileInputRef = useRef(null);  
+    const [selectedFile, setSelectedFile] = useState(null);
 
     // Data States
     const [faculty, setFaculty] = useState([]);
@@ -48,7 +50,10 @@ const AdminDashboard = () => {
             setLoading(false);
         }
     };
-
+ const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) setSelectedFile(file);
+    };
     const handleAddFaculty = async (e) => {
         e.preventDefault();
         try {
@@ -168,10 +173,26 @@ const AdminDashboard = () => {
                             </div>
 
                             <div className="mb-2 text-sm text-slate-500 dark:text-slate-400">Select Result File</div>
-                            <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 rounded-xl p-8 flex flex-col items-center justify-center gap-4 hover:border-indigo-500 dark:hover:border-indigo-500 transition-colors cursor-pointer group">
+
+                            {/* HIDDEN INPUT FIELD */}
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                className="hidden"
+                                accept=".csv, .xlsx, .xls"
+                            />
+
+                            {/* CLICKABLE BOX */}
+                            <div
+                                onClick={() => fileInputRef.current.click()}
+                                className="border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 rounded-xl p-8 flex flex-col items-center justify-center gap-4 hover:border-indigo-500 dark:hover:border-indigo-500 transition-colors cursor-pointer group"
+                            >
                                 <div className="flex items-center gap-3 bg-white dark:bg-slate-800 px-4 py-2 rounded-lg group-hover:bg-slate-100 dark:group-hover:bg-slate-700 transition-colors shadow-sm dark:shadow-none border border-slate-200 dark:border-transparent">
                                     <span className="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">Choose File</span>
-                                    <span className="text-slate-500 dark:text-slate-400 text-sm">No file chosen</span>
+                                    <span className="text-slate-500 dark:text-slate-400 text-sm">
+                                        {selectedFile ? selectedFile.name : "No file chosen"}
+                                    </span>
                                 </div>
                             </div>
                             <p className="text-xs text-slate-500 mt-2 mb-6">Supported formats: .xlsx, .xls, .csv</p>
@@ -379,18 +400,15 @@ const AdminDashboard = () => {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Department</label>
-                                    <select
+                                    <input
                                         name="department"
+                                        type="text"
+                                        required
                                         value={newFaculty.department}
                                         onChange={e => setNewFaculty({ ...newFaculty, department: e.target.value })}
                                         className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
-                                    >
-                                        <option value="CSE">CSE</option>
-                                        <option value="ECE">ECE</option>
-                                        <option value="MECH">MECH</option>
-                                        <option value="EEE">EEE</option>
-                                        <option value="CIVIL">CIVIL</option>
-                                    </select>
+                                        placeholder="Enter Department (e.g., CSE)"
+                                    />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Password</label>
@@ -433,20 +451,17 @@ const AdminDashboard = () => {
                                         placeholder="Data Structures"
                                     />
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Department</label>
-                                    <select
-                                        value={newSubject.department}
-                                        onChange={e => setNewSubject({ ...newSubject, department: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
-                                    >
-                                        <option value="CSE">CSE</option>
-                                        <option value="ECE">ECE</option>
-                                        <option value="MECH">MECH</option>
-                                        <option value="EEE">EEE</option>
-                                        <option value="CIVIL">CIVIL</option>
-                                    </select>
-                                </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Department</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={newSubject.department}
+                                            onChange={e => setNewSubject({ ...newSubject, department: e.target.value })}
+                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                                            placeholder="Enter Department (e.g., CSE)"
+                                        />
+                                    </div>
                                 <button className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition-colors mt-2">
                                     Add Subject
                                 </button>
