@@ -37,9 +37,9 @@ Unlike manual revaluation systems that take weeks, ReValuate delivers:
 
 ---
 
-## 🚀 Key Features
+##  Key Features
 
-### For Students 📚
+### For Students 
 - **One-Click Application**: Apply for revaluation with integrated payment
 - **Real-Time Status Tracking**: Monitor request progress from submission to publication
 - **AI-Powered Insights**: Receive detailed feedback on answer quality, gap analysis, and scoring
@@ -56,15 +56,15 @@ Unlike manual revaluation systems that take weeks, ReValuate delivers:
 - **Answer Key Management**: Upload reference materials for accurate grading
 - **Immutable Publishing**: Prevents accidental modifications after publication
 
-### For Administrators 🛠️
+### For Administrators 
 - **Department Management**: Configure subjects, teachers, and specializations
 - **System Monitoring**: Track worker queues, AI usage, and system health
 - **Audit Trail**: Complete history of all actions and status changes
 
 ---
-## 📸 Gallery & Proof of Work
+## Gallery & Proof of Work
 
-### 📱 Responsive Dashboard
+###  Responsive Dashboard
 ![Student Dashboard](./images_of_website/Student_portal.jpeg)
 
 ![Teacher Dashboard](./images_of_website/Teacher_Portal.jpeg)
