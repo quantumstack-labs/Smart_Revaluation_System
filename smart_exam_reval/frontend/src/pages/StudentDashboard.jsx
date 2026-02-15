@@ -33,7 +33,7 @@ const StudentDashboard = () => {
     useEffect(() => {
         // CRITICAL FIX: Don't fetch until user is loaded and defined
         if (!authLoading && user) {
-            console.log(" Auth ready, fetching dashboard data...", { userId: user.id });
+            
             fetchData();
         } else if (!authLoading && !user) {
             console.warn(" No user found after auth loaded, redirecting to login");
@@ -56,17 +56,13 @@ const StudentDashboard = () => {
             }
 
             const token = session.access_token;
-            console.log(" Token retrieved successfully, length:", token.length);
+           
             const headers = { Authorization: `Bearer ${token}` };
 
             // Fetch all data from our backend dashboard endpoint
             const { data } = await api.get('/api/student/dashboard', { headers });
 
-            console.log(" Dashboard Data Received:", {
-                requestsCount: data.revaluation_requests?.length || 0,
-                requests: data.revaluation_requests,
-                marksCount: data.marks?.length || 0
-            });
+        
 
             setApplications(data.revaluation_requests || []);
             updateStats(data.revaluation_requests || []);
@@ -118,12 +114,11 @@ const StudentDashboard = () => {
                 total_marks: parseInt(newSubject.total_marks || 100)
             };
 
-            console.log("Sending subject data:", payload);
 
             // Use the api instance which auto-injects token
             const { data } = await api.post('/api/student/add-subject', payload);
 
-            console.log("Subject added:", data);
+          
 
             // Update local state with the new subject from backend
             const addedSubject = {
@@ -231,12 +226,7 @@ const StudentDashboard = () => {
                                                     app.status?.toUpperCase() !== 'REJECTED'
                                                 );
 
-                                                console.log(`🔍 Checking subject ${sub.code}:`, {
-                                                    hasRequest: !!activeRequest,
-                                                    status: activeRequest?.status,
-                                                    allRequestCodes: applications.map(a => a.subject_code)
-                                                });
-
+                                            
                                                 if (activeRequest) {
                                                     return (
                                                         <span className="text-green-600 dark:text-green-400 font-bold text-xs">
@@ -334,7 +324,7 @@ const StudentDashboard = () => {
                         request={selectedRequest}
                         isTeacher={false}
                         onAppeal={(requestId, appealText) => {
-                            console.log("Appeal submitted:", { requestId, appealText });
+                            
                             toast.success("Appeal submitted successfully!");
                         }}
                     />

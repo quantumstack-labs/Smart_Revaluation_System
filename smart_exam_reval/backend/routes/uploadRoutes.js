@@ -19,12 +19,8 @@ router.post("/answer-sheet", upload.array("files", 5), async (req, res) => {
             return res.status(400).json({ error: "Request ID is required" });
         }
 
-        console.log(` Upload received for Request ${requestId}: ${files.length} files`);
-
         // 1. Construct File URLs - Store as array for JSONB/TEXT[] column
         const fileUrls = files.map(file => `/uploads/${file.filename}`);
-
-        console.log(`File URLs to save:`, fileUrls);
 
         // 2. Update Database with answer_script_urls array
         const query = `
@@ -57,7 +53,6 @@ router.post("/answer-sheet", upload.array("files", 5), async (req, res) => {
             // Continue anyway - files are uploaded, OCR can be done manually
         }
 
-        console.log(` Uploaded ${files.length} files for request #${requestId}`);
 
         res.json({
             success: true,
