@@ -13,7 +13,7 @@ dist-ssr/
 
 # Env files
 .env
-.env.*
+.env.
 
 # Local config
 *.local
