@@ -3,17 +3,36 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabase';
 import toast from 'react-hot-toast';
-import { GraduationCap, User, Building, Hash, Mail, Lock, ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react'; // Added Loader2
+import { GraduationCap, User, Building, Hash, Mail, Lock, ArrowRight, Eye, EyeOff, Loader2, Check, X } from 'lucide-react';
 import Navbar from '../components/Navbar';
+
+// Password strength constants
+const PASSWORD_STRENGTH = {
+    WEAK: { level: 'Weak', color: 'bg-red-500', textColor: 'text-red-400', width: '33%' },
+    FAIR: { level: 'Fair', color: 'bg-yellow-500', textColor: 'text-yellow-400', width: '66%' },
+    STRONG: { level: 'Strong', color: 'bg-green-500', textColor: 'text-green-400', width: '100%' }
+};
+
+const PASSWORD_MIN_LENGTH = 6;
+const PASSWORD_STRONG_LENGTH = 8;
 
 const Signup = () => {
     // We only need auth state here, not the global loading setter
     const { role, isAuthenticated, signupWithEmail } = useAuth();
     const navigate = useNavigate();
 
-    
+
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [passwordStrength, setPasswordStrength] = useState(PASSWORD_STRENGTH.WEAK);
+    const [passwordRequirements, setPasswordRequirements] = useState({
+        minLength: false,
+        strongLength: false,
+        hasUpperCase: false,
+        hasLowerCase: false,
+        hasNumbers: false,
+        hasSymbols: false
+    });
 
     // Form State
     const [formData, setFormData] = useState({
@@ -34,8 +53,51 @@ const Signup = () => {
         }
     }, [isAuthenticated, role, navigate]);
 
+    /**
+     * Calculates password strength based on length and character composition
+     * @param {string} password - The password to evaluate
+     * @returns {Object} Strength object with level, color, textColor, and width properties
+     */
+    const calculatePasswordStrength = (password) => {
+        if (password.length < PASSWORD_MIN_LENGTH) {
+            return PASSWORD_STRENGTH.WEAK;
+        }
+
+        const hasUpperCase = /[A-Z]/.test(password);
+        const hasLowerCase = /[a-z]/.test(password);
+        const hasNumbers = /[0-9]/.test(password);
+        const hasSymbols = /[^A-Za-z0-9]/.test(password);
+
+        // Update requirements state
+        setPasswordRequirements({
+            minLength: password.length >= PASSWORD_MIN_LENGTH,
+            strongLength: password.length >= PASSWORD_STRONG_LENGTH,
+            hasUpperCase,
+            hasLowerCase,
+            hasNumbers,
+            hasSymbols
+        });
+
+        // Strong: 8+ chars with mixed case, numbers, and symbols
+        if (password.length >= PASSWORD_STRONG_LENGTH && hasUpperCase && hasLowerCase && hasNumbers && hasSymbols) {
+            return PASSWORD_STRENGTH.STRONG;
+        }
+
+        // Fair: 6+ chars with some variety
+        if (password.length >= PASSWORD_MIN_LENGTH) {
+            return PASSWORD_STRENGTH.FAIR;
+        }
+
+        return PASSWORD_STRENGTH.WEAK;
+    };
+
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+
+        if (name === 'password') {
+            setPasswordStrength(calculatePasswordStrength(value));
+        }
     };
 
     const handleSignup = async (e) => {
@@ -196,6 +258,7 @@ const Signup = () => {
                                     className="block w-full pl-10 pr-10 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all"
                                     placeholder="••••••••"
                                     required
+                                    aria-describedby="password-strength-meter password-requirements"
                                 />
                                 <button
                                     type="button"
@@ -205,6 +268,82 @@ const Signup = () => {
                                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                 </button>
                             </div>
+                            {/* Password Strength Meter */}
+                            {formData.password && (
+                                <div className="mt-3" id="password-strength-meter" role="status" aria-live="polite">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <span className="text-xs text-slate-400">Password Strength:</span>
+                                        <span className={`text-xs font-semibold ${passwordStrength.textColor}`}>
+                                            {passwordStrength.level}
+                                        </span>
+                                    </div>
+                                    <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full ${passwordStrength.color} transition-all duration-300 ease-out`}
+                                            style={{ width: passwordStrength.width }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Password Requirements Checklist */}
+                            {formData.password && (
+                                <div className="mt-3 space-y-2" id="password-requirements">
+                                    <p className="text-xs text-slate-400 mb-2">Password must contain:</p>
+                                    <div className="grid grid-cols-1 gap-1.5">
+                                        <div className="flex items-center gap-2">
+                                            {passwordRequirements.minLength ? (
+                                                <Check className="h-4 w-4 text-green-400" />
+                                            ) : (
+                                                <X className="h-4 w-4 text-slate-600" />
+                                            )}
+                                            <span className={`text-xs ${passwordRequirements.minLength ? 'text-green-400' : 'text-slate-500'}`}>
+                                                At least {PASSWORD_MIN_LENGTH} characters
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {passwordRequirements.hasUpperCase ? (
+                                                <Check className="h-4 w-4 text-green-400" />
+                                            ) : (
+                                                <X className="h-4 w-4 text-slate-600" />
+                                            )}
+                                            <span className={`text-xs ${passwordRequirements.hasUpperCase ? 'text-green-400' : 'text-slate-500'}`}>
+                                                One uppercase letter
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {passwordRequirements.hasLowerCase ? (
+                                                <Check className="h-4 w-4 text-green-400" />
+                                            ) : (
+                                                <X className="h-4 w-4 text-slate-600" />
+                                            )}
+                                            <span className={`text-xs ${passwordRequirements.hasLowerCase ? 'text-green-400' : 'text-slate-500'}`}>
+                                                One lowercase letter
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {passwordRequirements.hasNumbers ? (
+                                                <Check className="h-4 w-4 text-green-400" />
+                                            ) : (
+                                                <X className="h-4 w-4 text-slate-600" />
+                                            )}
+                                            <span className={`text-xs ${passwordRequirements.hasNumbers ? 'text-green-400' : 'text-slate-500'}`}>
+                                                One number
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {passwordRequirements.hasSymbols ? (
+                                                <Check className="h-4 w-4 text-green-400" />
+                                            ) : (
+                                                <X className="h-4 w-4 text-slate-600" />
+                                            )}
+                                            <span className={`text-xs ${passwordRequirements.hasSymbols ? 'text-green-400' : 'text-slate-500'}`}>
+                                                One special character
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Submit Button */}
