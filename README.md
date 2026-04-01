@@ -31,7 +31,7 @@ Unlike manual revaluation systems that take weeks, ReValuate delivers:
 - ✅ **3-Action Teacher Workflow** (Purple/Green/Red buttons for instant decisions)
 - ✅ **Smart Teacher Matching** (Dynamic assignment based on subject expertise)
 - ✅ **PDF to Image AI Grading** (Supports multi-page answer scripts)
-- ✅ **Secure Payments**: Razorpay integration for fee processing.
+- ✅ **Secure Payments**:Stripe integration for fee processing.
 - **Supported Subjects**: Built-in support for Core CS subjects (UX, AIML, PMA, COA, EHS).
 - **Responsive Design**: Mobile-first dashboard for students and faculty.
 
@@ -179,7 +179,7 @@ graph TB
 ##  Project Structure
 
 ```
-revaluate/
+smart_exam_reval/
 ├── frontend/               # React + Vite application
 │   ├── src/
 │   │   ├── components/    # Reusable UI components
@@ -230,8 +230,8 @@ revaluate/
 ```mermaid
 sequenceDiagram
     Student->>Frontend: Apply for Reval
-    Frontend->>Razorpay: Process Payment
-    Razorpay-->>Frontend: Payment Success
+    Frontend->>Stripe: Process Payment
+    Stripe-->>Frontend: Payment Success
     Frontend->>Backend: Create Request
     Backend->>Database: Store Request (SUBMITTED)
     Backend->>Redis: Queue AI Job

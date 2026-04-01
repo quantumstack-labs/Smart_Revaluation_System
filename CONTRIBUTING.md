@@ -1,6 +1,6 @@
 # Contributing to ReValuate
 
-First off, thanks for taking the time to contribute! 🎉
+First off, thanks for taking the time to contribute!
 
 ReValuate is an AI-powered Exam Revaluation System that helps students get fair, transparent grading using Gemini Vision AI. We welcome contributions from the community.
 
