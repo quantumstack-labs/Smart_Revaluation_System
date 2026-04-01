@@ -1,0 +1,60 @@
+name: PR Automation Bot
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  welcome-and-check:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Welcome Comment & Auto-Assign
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const commitSha = context.payload.pull_request.head.sha;
+            const shortSha = commitSha.substring(0, 7);
+            const commitUrl = `${context.payload.pull_request.head.repo.html_url}/commit/${commitSha}`;
+            
+            const previewUrl = `https://revaluate-web-pr-${prNumber}.onrender.com`;
+            const logsUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+
+            let comment = `###  Deploy Preview for **ReValuate** is ready!\n\n`;
+            comment += `Hey @${context.payload.pull_request.user.login}, thanks for the PR! Here is your preview link to test things out:\n\n`;
+            
+            comment += `| What | Where |\n`;
+            comment += `| :--- | :--- |\n`;
+            comment += `|  Latest commit | [${shortSha}](${commitUrl}) |\n`;
+            comment += `|  Build logs | [View Actions](${logsUrl}) |\n`;
+            comment += `|  Live Preview | [Test it out here](${previewUrl}) |\n\n`;
+
+            const prBody = context.payload.pull_request.body || "";
+            const hasImages = prBody.match(/\.(png|jpe?g|gif|svg)/i);
+
+            if (!hasImages) {
+              comment += `>  **Quick heads-up:** I didn't spot any screenshots in your PR notes. If you tweaked the frontend UI, do you mind dropping some before/after pics in the description? It helps us review much faster!\n`;
+            } else {
+              comment += `>  Awesome, I see you dropped some screenshots in there. Huge help for the review process, thanks!\n`;
+            }
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+            try {
+              await github.rest.pulls.requestReviewers({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.issue.number,
+                reviewers: ["AA1-34-Ganesh"]
+              });
+            } catch (error) {
+              console.log("Could not request reviewer. Probably because you opened the PR yourself!");
+            }
