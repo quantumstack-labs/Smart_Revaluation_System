@@ -31,7 +31,7 @@ const Footer = () => {
                         <h3 className="text-slate-900 dark:text-white font-semibold mb-4">Contact</h3>
                         <ul className="space-y-2">
                             <li className="flex items-center gap-2">
-                                <Mail className="w-4 h-4" />
+                                <Mail className="w-4 h-4" aria-hidden="true" />
                                 <a href="mailto:smartrevaluationsystem@gmail.com" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">smartrevaluationsystem@gmail.com</a>
                             </li>
                             <li>Chennai,Tamil Nadu</li>
@@ -42,9 +42,9 @@ const Footer = () => {
                 <div className="pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
                     <p className="text-sm text-slate-500 dark:text-slate-500">© 2025 ReValuate. All rights reserved.</p>
                     <div className="flex gap-4">
-                        <a href="#" className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"><Github className="w-5 h-5" /></a>
-                        <a href="#" className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"><Twitter className="w-5 h-5" /></a>
-                        <a href="#" className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"><Linkedin className="w-5 h-5" /></a>
+                        <a href="#" aria-label="GitHub" className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"><Github className="w-5 h-5" aria-hidden="true" /></a>
+                        <a href="#" aria-label="Twitter" className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"><Twitter className="w-5 h-5" aria-hidden="true" /></a>
+                        <a href="#" aria-label="LinkedIn" className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"><Linkedin className="w-5 h-5" aria-hidden="true" /></a>
                     </div>
                 </div>
             </div>
