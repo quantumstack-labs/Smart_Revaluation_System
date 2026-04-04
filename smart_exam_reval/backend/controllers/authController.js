@@ -12,7 +12,10 @@ const supabase = require("../config/supabaseClient");
 exports.validateRole = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
-        if (!authHeader) return res.status(401).json({ message: "No token provided" });
+        if (!authHeader) return res.status(401).json({
+        success: false,
+        message: "No token provided"
+        });
 
         const token = authHeader.split(' ')[1];
 
@@ -20,7 +23,10 @@ exports.validateRole = async (req, res, next) => {
         const { data: { user }, error } = await supabase.auth.getUser(token);
 
         if (error || !user) {
-            return res.status(401).json({ message: "Invalid or expired token" });
+            return res.status(401).json({
+            success: false,
+            message: "Invalid or expired token"
+            });
         }
 
         // 2. Fetch Public User Details & Role
@@ -28,12 +34,16 @@ exports.validateRole = async (req, res, next) => {
         const { rows } = await pool.query(query, [user.id]);
 
         if (rows.length === 0) {
-            return res.status(404).json({ message: "User profile not found in public records." });
+            return res.status(404).json({
+            success: false,
+            message: "User profile not found in public records."
+});
         }
 
         const publicUser = rows[0];
 
         res.json({
+            success:true,
             message: "Role verified",
             user: {
                 id: publicUser.id,
@@ -46,21 +56,30 @@ exports.validateRole = async (req, res, next) => {
 
     } catch (err) {
         console.error("Role Validation Error:", err);
-        res.status(500).json({ message: "Internal Server Error" });
+       res.status(500).json({
+  success: false,
+  message: "Internal Server Error"
+});
     }
 };
 
 exports.register = async (req, res, next) => {
     try {
         const { error } = registerSchema.validate(req.body);
-        if (error) return res.status(400).json({ message: error.details[0].message });
+        if (error) return res.status(400).json({
+  success: false,
+  message: error.details[0].message
+});
 
         // Get all possible fields from frontend
         const { name, email, password, role, reg_no, subject, department } = req.body;
 
         const existingUser = await userModel.findByEmail(email);
         if (existingUser)
-            return res.status(409).json({ message: "Email already registered" });
+            return res.status(409).json({
+  success: false,
+  message: "Email already registered"
+});
 
         const pepper = process.env.PEPPER || "";
         const hashedPassword = await bcrypt.hash(password + pepper, 12);
@@ -94,6 +113,7 @@ exports.register = async (req, res, next) => {
         }
 
         res.status(201).json({
+            success:true,
             message: "Registration successful",
             user: {
                 id: newUser.id,
@@ -105,7 +125,10 @@ exports.register = async (req, res, next) => {
     } catch (err) {
         // Handle Postgres Unique Violation (e.g., Duplicate Reg No)
         if (err.code === '23505') {
-            return res.status(409).json({ message: "Email or Register Number already exists." });
+            return res.status(409).json({
+  success: false,
+  message: "Email or Register Number already exists."
+});
         }
         next(err);
     }
@@ -114,18 +137,27 @@ exports.register = async (req, res, next) => {
 exports.login = async (req, res, next) => {
     try {
         const { error } = loginSchema.validate(req.body);
-        if (error) return res.status(400).json({ message: error.details[0].message });
+        if (error) return res.status(400).json({
+  success: false,
+  message: error.details[0].message
+});
 
         const { email, password } = req.body;
 
         const user = await userModel.findByEmail(email);
-        if (!user) return res.status(401).json({ message: "Invalid credentials" });
+        if (!user) return res.status(401).json({
+  success: false,
+  message: "Invalid credentials"
+});
 
         const pepper = process.env.PEPPER || "";
         const isMatch = await bcrypt.compare(password + pepper, user.password);
 
         if (!isMatch)
-            return res.status(401).json({ message: "Invalid credentials" });
+            return res.status(401).json({
+  success: false,
+  message: "Invalid credentials"
+});
 
         const token = jwt.generateToken({
             id: user.id,
@@ -134,6 +166,7 @@ exports.login = async (req, res, next) => {
 
         // FIX 3: Return department in login response (useful for frontend)
         res.json({
+            success: true,
             message: "Login successful",
             token,
             user: {

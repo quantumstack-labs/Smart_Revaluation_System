@@ -12,7 +12,10 @@ exports.dashboard = async (req, res, next) => {
 
     // Safety Check: If user exists but has no student data (reg_no)
     if (!student) {
-      return res.status(404).json({ message: "Student profile not found. Please contact admin." });
+      return res.status(404).json({
+        success: false,
+        message: "Student profile not found. Please contact admin.",
+      });
     }
 
     // 2. Get General User Profile (Name, Email)
@@ -43,10 +46,16 @@ exports.addSubject = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { subject_name, subject_code, marks_obtained, total_marks } = req.body;
-
+ 
     // 1. Validation
     if (!subject_code || marks_obtained === undefined) {
-      return res.status(400).json({ error: "Missing required fields (subject_code and marks_obtained required)" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message:
+            "Missing required fields (subject_code and marks_obtained required)",
+        });
     }
 
     // Sanitize and validate as numbers
@@ -54,7 +63,10 @@ exports.addSubject = async (req, res, next) => {
     const parsedTotal = parseInt(total_marks, 10) || 100; // Default to 100 if not provided
 
     if (isNaN(parsedMarks) || parsedMarks < 0) {
-      return res.status(400).json({ error: "Invalid marks value" });
+      return res
+        .status(400)
+        .json({ success: false,
+             message: "Invalid marks value" });
     }
 
     // 2. Calculations
@@ -98,8 +110,9 @@ exports.addSubject = async (req, res, next) => {
     const result = await pool.query(query, values);
 
     res.status(201).json({
+      success:true,
       message: "Subject added successfully!",
-      subject: result.rows[0]
+      subject: result.rows[0],
     });
 
   } catch (err) {
@@ -107,9 +120,17 @@ exports.addSubject = async (req, res, next) => {
 
     // Check for unique constraint violation
     if (err.code === '23505') {
-      return res.status(400).json({ error: "Subject already exists." });
+      return res
+        .status(400)
+        .json({ success: false, 
+            message: "Subject already exists." });
     }
 
-    res.status(500).json({ error: "Database insertion failed: " + err.message });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Database insertion failed: " + err.message,
+      });
   }
 };

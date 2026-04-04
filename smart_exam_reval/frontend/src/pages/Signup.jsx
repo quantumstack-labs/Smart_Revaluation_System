@@ -125,7 +125,7 @@ const Signup = () => {
             );
 
             if (!result.success) {
-                toast.error(result.error || "Signup failed");
+                toast.error(result.error ||result.message|| "Signup failed");
                 setIsLoading(false);
                 return;
             }
@@ -144,7 +144,9 @@ const Signup = () => {
 
         } catch (error) {
             console.error("Signup Error:", error.message);
-            toast.error(error.message || "Signup failed");
+            toast.error( error.response?.data?.message ||
+              error.response?.data?.error || 
+                        "Signup failed");
         } finally {
             setIsLoading(false);
         }
