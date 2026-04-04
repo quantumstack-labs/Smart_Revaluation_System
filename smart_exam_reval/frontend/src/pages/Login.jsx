@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 import { GraduationCap, Mail, Lock, Eye, EyeOff, ArrowRight, Loader } from 'lucide-react'; // Added Loader
 import Navbar from '../components/Navbar';
 import { motion } from 'framer-motion'; // Ensure you have framer-motion installed
