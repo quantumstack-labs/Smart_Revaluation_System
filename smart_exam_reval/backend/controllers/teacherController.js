@@ -26,30 +26,7 @@ exports.getTeacherRequests = async (req, res, next) => {
 
         const { subject_specialization } = teacher; // We ignore 'department' for matching now
 
-        // --- DEEP TRACE LOGGING (Temporary) ---
         const trimmedSpec = subject_specialization ? subject_specialization.trim() : "";
-        console.log(`[DEBUG] Teacher Spec: "${subject_specialization}" (Length: ${subject_specialization ? subject_specialization.length : 0})`);
-        console.log(`[DEBUG] Trimmed Spec: "${trimmedSpec}" (Length: ${trimmedSpec.length})`);
-
-        // Diagnostic check for any PMA request
-        try {
-            const diagQuery = `
-        SELECT r.id, r.teacher_id, m.subject_code, m.subject_name, r.status 
-        FROM revaluation_requests r 
-        LEFT JOIN marks m ON r.subject_id = m.id 
-        WHERE m.subject_code ILIKE '%PMA%' OR m.subject_name ILIKE '%PMA%'
-        LIMIT 5
-      `;
-            const diagRes = await pool.query(diagQuery);
-            if (diagRes.rows.length > 0) {
-                console.log(`[DEBUG] Found ${diagRes.rows.length} PMA-related requests:`, diagRes.rows);
-            } else {
-                console.log(`[DEBUG] No PMA-related requests found in DB.`);
-            }
-        } catch (diagErr) {
-            console.log(`[DEBUG] Diagnostic Query Failed:`, diagErr.message);
-        }
-        // ---------------------------------------
 
         // 2. Fetch Requests
         // Action: Rewrite the WHERE clause to be ultra-robust
@@ -108,7 +85,9 @@ exports.getTeacherRequests = async (req, res, next) => {
             trimmedSpec || null
         ]);
 
-        console.log(`Found ${requestsResult.rows.length} requests.`);
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`Found ${requestsResult.rows.length} requests.`);
+        }
 
         res.json({
             teacher_info: teacher,
