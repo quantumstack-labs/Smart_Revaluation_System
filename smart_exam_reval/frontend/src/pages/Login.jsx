@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { GraduationCap, Mail, Lock, Eye, EyeOff, ArrowRight, Loader } from 'lucide-react'; // Added Loader
+import { GraduationCap, Mail, Lock, Eye, EyeOff, ArrowRight, Loader } from 'lucide-react';
+import toast from 'react-hot-toast';
 import Navbar from '../components/Navbar';
-import { motion } from 'framer-motion'; // Ensure you have framer-motion installed
+import { motion } from 'framer-motion';
 
 const Login = () => {
-    const { loginWithGoogle, loginWithEmail, role, isAuthenticated } = useAuth(); // Destructure loginWithEmail
+    const { loginWithGoogle, loginWithEmail, role, isAuthenticated } = useAuth();
     const navigate = useNavigate();
 
     const [email, setEmail] = useState('');
@@ -28,13 +29,10 @@ const Login = () => {
         setLoading(true);
 
         try {
-            // Use the Context function instead of direct Supabase call
             const { success } = await loginWithEmail(email, password);
 
             if (!success) {
-                // If loginWithEmail returns success: false, it means an error was already handled internally
-                // and a toast might have been shown. We just need to stop loading.
-                // If loginWithEmail throws an error, it will be caught below.
+                // loginWithEmail returned success: false — context already handled the toast
             }
             // If success, the useEffect above will handle redirect
         } catch (error) {
@@ -49,6 +47,8 @@ const Login = () => {
                 // Server responded with error
                 const message = error.response.data?.message || error.response.data?.error;
                 toast.error(message || 'Login failed. Please check your credentials.');
+            } else if (error.message) {
+                toast.error(error.message);
             } else {
                 // Unknown error
                 toast.error('An unexpected error occurred. Please try again.');
@@ -141,7 +141,6 @@ const Login = () => {
                                     </button>
                                 </div>
                                 <div className="text-right">
-                                    {/* ✅ FIXED LINK HERE */}
                                     <Link to="/forgot-password" className="text-xs text-violet-600 dark:text-violet-400 hover:text-violet-500 dark:hover:text-violet-300 font-medium transition-colors">
                                         Forgot password?
                                     </Link>
