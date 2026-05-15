@@ -77,11 +77,11 @@ Make sure you have these installed:
 # Fork the repository on GitHub (click "Fork" button)
 
 # Clone YOUR fork
-git clone https://github.com/YOUR-USERNAME/revaluate.git
+git clone  https://github.com/quantumstack-labs/Smart_Revaluation_System.git
 cd revaluate
 
 # Add upstream remote (to sync with main repo)
-git remote add upstream https://github.com/ORIGINAL-USERNAME/revaluate.git
+git remote add upstream  https://github.com/quantumstack-labs/Smart_Revaluation_System.git
 ```
 
 ---
