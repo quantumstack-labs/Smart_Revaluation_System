@@ -144,14 +144,7 @@ const Home = () => {
 
             </main>
 
-            {/* Floating Assistant Button */}
-            <div className="fixed bottom-8 right-8 z-50">
-                <button className="group flex items-center gap-2 bg-gradient-to-r from-blue-600 to-violet-600 hover:scale-105 text-white px-6 py-3 rounded-full font-bold shadow-2xl shadow-violet-500/30 transition-all">
-                    <Bot className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-                    <span>Reval Assistant</span>
-                </button>
-            </div>
-
+           
             <Footer />
         </div>
     );
