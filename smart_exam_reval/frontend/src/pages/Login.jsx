@@ -3,7 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { GraduationCap, Mail, Lock, Eye, EyeOff, ArrowRight, Loader } from 'lucide-react'; // Added Loader
 import Navbar from '../components/Navbar';
-import { motion } from 'framer-motion'; // Ensure you have framer-motion installed
+import { motion } from 'framer-motion';
+import toast from 'react-hot-toast'; // Ensure you have framer-motion installed
 
 const Login = () => {
     const { loginWithGoogle, loginWithEmail, role, isAuthenticated } = useAuth(); // Destructure loginWithEmail
