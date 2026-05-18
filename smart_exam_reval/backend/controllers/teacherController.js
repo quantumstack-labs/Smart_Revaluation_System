@@ -4,6 +4,12 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
 const pdf = require('pdf-parse');
+const { Queue } = require("bullmq");
+const { redisConfig } = require("../config/redis");
+
+const embeddingQueue = new Queue("embedding-queue", {
+    connection: redisConfig,
+});
 
 // @desc    Get all requests relevant to this teacher (Assigned + Matching Unassigned)
 // @route   GET /api/teacher/dashboard
@@ -530,11 +536,19 @@ exports.uploadAnswerKey = async (req, res) => {
         `;
 
         const result = await pool.query(query, [teacherId, subjectCode, fileUrl, extractedText]);
+        const keyId = result.rows[0].id;
+
+// Trigger embedding queue job
+const job = await embeddingQueue.add("process-answer-key", {
+    keyId,
+    filePath: destPath,
+});
 
         res.json({
             success: true,
             keyId: result.rows[0].id,
-            message: "Answer Key Uploaded & Processed Successfully",
+            jobId: job.id,
+            message: "Answer Key Uploaded & Processing Started",
             data: result.rows[0]
         });
 
