@@ -14,10 +14,16 @@ exports.registerSchema = Joi.object({
         .required(),
 
     reg_no: Joi.string()
-        .alphanum()
-        .min(6)
-        .max(20)
-        .when("role", { is: "student", then: Joi.required() }),
+    .pattern(/^[0-9]{2}[A-Z]{2,5}[0-9]{3,4}$/)
+    .when("role", { 
+        is: "student", 
+        then: Joi.required(), 
+        otherwise: Joi.optional() 
+    })
+    .messages({
+        "string.pattern.base":
+            "Invalid Register Number format (e.g., 21CS1234)"
+    }),
 
     // ADDED: Department is required for students to assign teachers later
     department: Joi.string()
