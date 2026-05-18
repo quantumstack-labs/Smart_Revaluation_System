@@ -5,7 +5,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { Toaster } from 'react-hot-toast';
 import ProtectedRoute from './components/ProtectedRoute';
 
-import LoadingSpinner from './components/LoadingSpinner';
+import Loader from "./components/Loader";
 
 // Pages
 import Home from './pages/Home';
@@ -41,7 +41,7 @@ function App() {
           <RevalAssistantWidget />
 
 
-          <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950"><LoadingSpinner /></div>}>
+          <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950"><Loader fullScreen={true} size="large" /></div>}>
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Home />} />

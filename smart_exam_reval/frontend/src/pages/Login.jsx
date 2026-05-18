@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { GraduationCap, Mail, Lock, Eye, EyeOff, ArrowRight, Loader } from 'lucide-react'; // Added Loader
+// 1. Fixed import path to be relative
+import Loader from '../components/Loader'; 
+// 2. Removed 'Loader' from lucide-react to avoid name collision
+import { GraduationCap, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'; 
 import Navbar from '../components/Navbar';
 import { motion } from 'framer-motion';
-import toast from 'react-hot-toast'; // Ensure you have framer-motion installed
+import toast from 'react-hot-toast'; 
 
 const Login = () => {
-    const { loginWithGoogle, loginWithEmail, role, isAuthenticated } = useAuth(); // Destructure loginWithEmail
+    const { loginWithGoogle, loginWithEmail, role, isAuthenticated } = useAuth(); 
     const navigate = useNavigate();
 
     const [email, setEmail] = useState('');
@@ -29,29 +32,21 @@ const Login = () => {
         setLoading(true);
 
         try {
-            // Use the Context function instead of direct Supabase call
             const { success } = await loginWithEmail(email, password);
-
             if (!success) {
-                // If loginWithEmail returns success: false, it means an error was already handled internally
-                // and a toast might have been shown. We just need to stop loading.
-                // If loginWithEmail throws an error, it will be caught below.
+                // If loginWithEmail returns success: false, handled internally
             }
-            // If success, the useEffect above will handle redirect
         } catch (error) {
             console.error('Login error:', error);
 
-            // Handle different error types with user-friendly messages
             if (error.message === 'Network Error' || error.code === 'ECONNABORTED') {
                 toast.error('Network connection failed. Please check your internet.');
             } else if (error.code === 'ETIMEDOUT') {
                 toast.error('Request timed out. Please try again.');
             } else if (error.response) {
-                // Server responded with error
                 const message = error.response.data?.message || error.response.data?.error;
                 toast.error(message || 'Login failed. Please check your credentials.');
             } else {
-                // Unknown error
                 toast.error('An unexpected error occurred. Please try again.');
             }
         } finally {
@@ -59,10 +54,9 @@ const Login = () => {
         }
     };
 
+    // 3. Replaced the old hardcoded <div> spinner with your new customized <Loader /> component
     if (loading) {
-        return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>;
+        return <Loader fullScreen={true} size="large" text="Signing you in..." />;
     }
 
     return (
@@ -142,7 +136,6 @@ const Login = () => {
                                     </button>
                                 </div>
                                 <div className="text-right">
-                                    {/* ✅ FIXED LINK HERE */}
                                     <Link to="/forgot-password" className="text-xs text-violet-600 dark:text-violet-400 hover:text-violet-500 dark:hover:text-violet-300 font-medium transition-colors">
                                         Forgot password?
                                     </Link>
@@ -154,13 +147,7 @@ const Login = () => {
                                 disabled={loading}
                                 className="w-full bg-violet-600 hover:bg-violet-500 text-white py-4 rounded-xl font-bold shadow-lg shadow-violet-600/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {loading ? (
-                                    <Loader className="h-5 w-5 animate-spin" />
-                                ) : (
-                                    <>
-                                        Sign In <ArrowRight className="h-5 w-5" />
-                                    </>
-                                )}
+                                Sign In <ArrowRight className="h-5 w-5" />
                             </button>
                         </form>
 
