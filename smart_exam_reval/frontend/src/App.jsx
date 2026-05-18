@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast';
 import ProtectedRoute from './components/ProtectedRoute';
 
 import LoadingSpinner from './components/LoadingSpinner';
+import BackToTop from "./components/BackToTop";
 
 // Pages
 import Home from './pages/Home';
@@ -39,6 +40,7 @@ function App() {
           />
 
           <RevalAssistantWidget />
+          <BackToTop />
 
 
           <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950"><LoadingSpinner /></div>}>
