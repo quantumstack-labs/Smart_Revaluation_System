@@ -1,14 +1,18 @@
 const pool = require("../config/db");
+const { nanoid } = require('nanoid'); 
 
 // FIX: Use subjectId (Int) instead of subject_name (String)
 exports.createRequest = async (studentId, subjectId, teacherId) => {
+  // Generate secure alphanumeric tracking ID e.g. REV-9A3B2F
+  const applicationCode = 'REV-' + nanoid(6).toUpperCase();
+
   const query = `
-    INSERT INTO revaluation_requests (student_id, subject_id, teacher_id, status, payment_status)
-    VALUES ($1, $2, $3, 'pending', 'unpaid')
+    INSERT INTO revaluation_requests 
+    (student_id, subject_id, teacher_id, status, payment_status, application_code)
+    VALUES ($1, $2, $3, 'pending', 'unpaid', $4)
     RETURNING *;
   `;
-  // Note: We default status to 'pending' and payment to 'unpaid'
-  const { rows } = await pool.query(query, [studentId, subjectId, teacherId]);
+  const { rows } = await pool.query(query, [studentId, subjectId, teacherId, applicationCode]);
   return rows[0];
 };
 
@@ -49,7 +53,8 @@ exports.updatePayment = async (requestId, paymentStatus) => {
 exports.getRequestsByStudent = async (studentId) => {
   const query = `
     SELECT 
-      r.id, 
+      r.id,
+      r.application_code, 
       r.status, 
       r.payment_status, 
       r.created_at,
