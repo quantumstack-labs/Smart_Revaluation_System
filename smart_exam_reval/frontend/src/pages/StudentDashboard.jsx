@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import { formatTrackingId } from '../utils/formatters';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     FileText, CheckCircle, Clock, PlusCircle,
@@ -275,7 +276,11 @@ const StudentDashboard = () => {
                             <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-sm">
                                 {applications.map((app) => (
                                     <tr key={app.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                        <td className="p-4 font-mono text-slate-600 dark:text-slate-500">#{app.id.toString().slice(0, 4)}</td>
+                                        <td className="p-4 font-mono text-slate-600 dark:text-slate-500">
+                                            <span title={app.application_code || app.id}>
+                                                {formatTrackingId(app.application_code || `#${app.id}`)}
+                                            </span>
+                                        </td>
                                         <td className="p-4 text-slate-900 dark:text-white">{app.subject_code}</td>
                                         <td className="p-4"><StatusBadge status={app.status} /></td>
                                         <td className="p-4 text-green-600 dark:text-green-400 font-bold uppercase text-xs">Paid</td>
