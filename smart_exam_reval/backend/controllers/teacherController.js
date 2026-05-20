@@ -414,6 +414,12 @@ exports.uploadAnswerScript = async (req, res) => {
 // @desc    Reject Revaluation Request
 // @route   PUT /api/teacher/request/reject/:id
 // @access  Private (Teacher only)
+/**
+ * @desc    Reject Revaluation Request
+ * @route   PUT /api/teacher/request/reject/:id
+ * @param   {string} req.params.id - Alphanumeric tracking ID (e.g., "REV-9A3B2F"), not an integer
+ * @access  Private (Teacher only)
+ */
 exports.rejectRequest = async (req, res) => {
     try {
         const teacherId = req.user.id;

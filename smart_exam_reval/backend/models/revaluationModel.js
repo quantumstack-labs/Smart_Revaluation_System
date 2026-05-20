@@ -12,6 +12,9 @@ exports.createRequest = async (studentId, subjectId, teacherId) => {
   return rows[0];
 };
 
+/**
+ * @param {string} requestId - Alphanumeric tracking ID (e.g., "REV-9A3B2F"), not an integer
+ */
 exports.updateStatus = async (requestId, status) => {
   const query = `
     UPDATE revaluation_requests
@@ -23,6 +26,9 @@ exports.updateStatus = async (requestId, status) => {
   return rows[0];
 };
 
+/**
+ * @param {string} requestId - Alphanumeric tracking ID (e.g., "REV-9A3B2F"), not an integer
+ */
 exports.publishResult = async (requestId, status, teacherNotes) => {
   const query = `
       UPDATE revaluation_requests
@@ -34,6 +40,9 @@ exports.publishResult = async (requestId, status, teacherNotes) => {
   return rows[0];
 };
 
+/**
+ * @param {string} requestId - Alphanumeric tracking ID (e.g., "REV-9A3B2F"), not an integer
+ */
 exports.updatePayment = async (requestId, paymentStatus) => {
   const query = `
     UPDATE revaluation_requests
@@ -76,7 +85,9 @@ exports.checkExistingRequest = async (studentId, subjectId) => {
   const { rows } = await pool.query(query, [studentId, subjectId]);
   return rows[0];
 };
-
+/**
+ * @param {string} requestId - Alphanumeric tracking ID (e.g., "REV-9A3B2F"), not an integer
+ */
 exports.addAppeal = async (requestId, reason) => {
   const query = `
       UPDATE revaluation_requests 

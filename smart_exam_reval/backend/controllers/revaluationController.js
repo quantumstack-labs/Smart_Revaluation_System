@@ -66,6 +66,11 @@ exports.getStudentRequests = async (req, res, next) => {
     next(err);
   }
 };
+/**
+ * @desc    Process payment for revaluation request
+ * @param   {string} req.body.requestId - The alphanumeric tracking ID (e.g., "REV-9A3B2F"), not an integer
+ */
+
 exports.payment = async (req, res, next) => {
   try {
     const { requestId, studentEmail } = req.body;
