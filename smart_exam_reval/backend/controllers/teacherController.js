@@ -27,7 +27,7 @@ exports.getTeacherRequests = async (req, res, next) => {
 
         const { subject_specialization } = teacher; // We ignore 'department' for matching now
 
-        // --- DEEP TRACE LOGGING (Temporary) ---
+        
         const trimmedSpec = subject_specialization ? subject_specialization.trim() : "";
         logger.debug(`Teacher Spec: "${subject_specialization}" (Length: ${subject_specialization ? subject_specialization.length : 0})`);
         logger.debug(`Trimmed Spec: "${trimmedSpec}" (Length: ${trimmedSpec.length})`);
@@ -110,9 +110,10 @@ exports.getTeacherRequests = async (req, res, next) => {
             userId,
             trimmedSpec || null
         ]);
-
-        console.log(`Found ${requestsResult.rows.length} requests.`);
-
+        
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`Found ${requestsResult.rows.length} requests.`);
+        }
         res.json({
             teacher_info: teacher,
             revaluation_requests: requestsResult.rows
@@ -417,6 +418,12 @@ exports.uploadAnswerScript = async (req, res) => {
 // @desc    Reject Revaluation Request
 // @route   PUT /api/teacher/request/reject/:id
 // @access  Private (Teacher only)
+/**
+ * @desc    Reject Revaluation Request
+ * @route   PUT /api/teacher/request/reject/:id
+ * @param   {string} req.params.id - Alphanumeric tracking ID (e.g., "REV-9A3B2F"), not an integer
+ * @access  Private (Teacher only)
+ */
 exports.rejectRequest = async (req, res) => {
     try {
         const teacherId = req.user.id;

@@ -62,7 +62,6 @@ const Signup = () => {
         if (password.length < PASSWORD_MIN_LENGTH) {
             return PASSWORD_STRENGTH.WEAK;
         }
-
         const hasUpperCase = /[A-Z]/.test(password);
         const hasLowerCase = /[a-z]/.test(password);
         const hasNumbers = /[0-9]/.test(password);
@@ -153,35 +152,36 @@ const Signup = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-violet-500/30">
+        <div className="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans selection:bg-violet-500/30 transition-colors duration-300">
             <Navbar />
             <div className="pt-24 pb-12 min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
-                <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+                <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-3xl p-8 shadow-2xl relative overflow-hidden transition-colors duration-300">
 
                     {/* Header */}
                     <div className="text-center mb-8 relative z-10">
-                        <div className="w-16 h-16 bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-700">
+                        <div className="w-16 h-16 bg-slate-200 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-300 dark:border-slate-700 transition-colors duration-300">
                             <GraduationCap className="w-8 h-8 text-violet-500" />
                         </div>
-                        <h2 className="text-3xl font-bold text-white mb-2">Create Account</h2>
-                        <p className="text-slate-400">Join as a Student</p>
+                       <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2"> Create Account</h2>
+                        <p className="text-slate-600 dark:text-slate-400">Join as a Student</p>
                     </div>
 
                     <form onSubmit={handleSignup} className="space-y-4">
 
                         {/* Full Name */}
+
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Full Name</label>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-500 uppercase mb-1 ml-1">Full Name</label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <User className="h-5 w-5 text-slate-500" />
+                                    <User className="h-5 w-5 text-slate-600 dark:text-slate-500" />
                                 </div>
                                 <input
                                     type="text"
                                     name="fullName"
                                     value={formData.fullName}
                                     onChange={handleChange}
-                                    className="block w-full pl-10 pr-3 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all"
+                                    className="block w-full pl-10 pr-3 py-3 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all"
                                     placeholder="John Doe"
                                     required
                                 />
@@ -190,17 +190,17 @@ const Signup = () => {
 
                         {/* Department */}
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Department</label>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-500 uppercase mb-1 ml-1">Department</label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Building className="h-5 w-5 text-slate-500" />
+                                    <Building className="h-5 w-5 text-slate-600 dark:text-slate-500" />
                                 </div>
                                 <input
                                     type="text"
                                     name="department"
                                     value={formData.department}
                                     onChange={handleChange}
-                                    className="block w-full pl-10 pr-3 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all"
+                                    className="block w-full pl-10 pr-3 py-3 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all"
                                     placeholder="e.g. Computer Science"
                                     required
                                 />
@@ -209,17 +209,17 @@ const Signup = () => {
 
                         {/* Register Number */}
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Register Number</label>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-500 uppercase mb-1 ml-1">Register Number</label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Hash className="h-5 w-5 text-slate-500" />
+                                    <Hash className="h-5 w-5 text-slate-600 dark:text-slate-500" />
                                 </div>
                                 <input
                                     type="text"
                                     name="registerNumber"
                                     value={formData.registerNumber}
                                     onChange={handleChange}
-                                    className="block w-full pl-10 pr-3 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all"
+                                    className="block w-full pl-10 pr-3 py-3 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all"
                                     placeholder="REG2023001"
                                     required
                                 />
@@ -228,17 +228,17 @@ const Signup = () => {
 
                         {/* Email Address */}
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Email Address</label>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-500 uppercase mb-1 ml-1">Email Address</label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Mail className="h-5 w-5 text-slate-500" />
+                                    <Mail className="h-5 w-5 text-slate-600 dark:text-slate-500" />
                                 </div>
                                 <input
                                     type="email"
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
-                                    className="block w-full pl-10 pr-3 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all"
+                                    className="block w-full pl-10 pr-3 py-3 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all"
                                     placeholder="name@example.com"
                                     required
                                 />
@@ -247,24 +247,24 @@ const Signup = () => {
 
                         {/* Password */}
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Password</label>
+                            <label className="block text-xs font-bold text-slate-600 dark:text-slate-600 dark:text-slate-500 uppercase mb-1 ml-1">Password</label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Lock className="h-5 w-5 text-slate-500" />
+                                    <Lock className="h-5 w-5 text-slate-600 dark:text-slate-500" />
                                 </div>
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     name="password"
                                     value={formData.password}
                                     onChange={handleChange}
-                                    className="block w-full pl-10 pr-10 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all"
+                                    className="block w-full pl-10 pr-10 py-3 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all"
                                     placeholder="••••••••"
                                     required
                                     aria-describedby="password-strength-meter password-requirements"
                                 />
                                 <button
                                     type="button"
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300 transition-colors"
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-600 dark:text-slate-500 hover:text-slate-300 transition-colors"
                                     onClick={() => setShowPassword(!showPassword)}
                                 >
                                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -299,7 +299,7 @@ const Signup = () => {
                                             ) : (
                                                 <X className="h-4 w-4 text-slate-600" />
                                             )}
-                                            <span className={`text-xs ${passwordRequirements.minLength ? 'text-green-400' : 'text-slate-500'}`}>
+                                            <span className={`text-xs ${passwordRequirements.minLength ? 'text-green-400' : 'text-slate-600 dark:text-slate-500'}`}>
                                                 At least {PASSWORD_MIN_LENGTH} characters
                                             </span>
                                         </div>
@@ -309,7 +309,7 @@ const Signup = () => {
                                             ) : (
                                                 <X className="h-4 w-4 text-slate-600" />
                                             )}
-                                            <span className={`text-xs ${passwordRequirements.hasUpperCase ? 'text-green-400' : 'text-slate-500'}`}>
+                                            <span className={`text-xs ${passwordRequirements.hasUpperCase ? 'text-green-400' : 'text-slate-600 dark:text-slate-500'}`}>
                                                 One uppercase letter
                                             </span>
                                         </div>
@@ -319,7 +319,7 @@ const Signup = () => {
                                             ) : (
                                                 <X className="h-4 w-4 text-slate-600" />
                                             )}
-                                            <span className={`text-xs ${passwordRequirements.hasLowerCase ? 'text-green-400' : 'text-slate-500'}`}>
+                                            <span className={`text-xs ${passwordRequirements.hasLowerCase ? 'text-green-400' : 'text-slate-600 dark:text-slate-500'}`}>
                                                 One lowercase letter
                                             </span>
                                         </div>
@@ -329,7 +329,7 @@ const Signup = () => {
                                             ) : (
                                                 <X className="h-4 w-4 text-slate-600" />
                                             )}
-                                            <span className={`text-xs ${passwordRequirements.hasNumbers ? 'text-green-400' : 'text-slate-500'}`}>
+                                            <span className={`text-xs ${passwordRequirements.hasNumbers ? 'text-green-400' : 'text-slate-600 dark:text-slate-500'}`}>
                                                 One number
                                             </span>
                                         </div>
@@ -339,7 +339,7 @@ const Signup = () => {
                                             ) : (
                                                 <X className="h-4 w-4 text-slate-600" />
                                             )}
-                                            <span className={`text-xs ${passwordRequirements.hasSymbols ? 'text-green-400' : 'text-slate-500'}`}>
+                                            <span className={`text-xs ${passwordRequirements.hasSymbols ? 'text-green-400' : 'text-slate-600 dark:text-slate-500'}`}>
                                                 One special character
                                             </span>
                                         </div>
@@ -366,7 +366,7 @@ const Signup = () => {
 
                     {/* Footer */}
                     <div className="mt-8 text-center">
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-slate-600 dark:text-slate-500">
                             Already have an account? <Link to="/login" className="text-violet-400 hover:text-violet-300 font-bold transition-colors">Sign in</Link>
                         </p>
                     </div>

@@ -18,20 +18,20 @@
 
 | Component | Status | Hosting | Note |
 | :--- | :--- | :--- | :--- |
-| **Frontend** | 🟢 **[Live Link](https://revaluate-web.onrender.com)** | Render Static Site | Fully Functional |
-| **Backend API** | 🟢 Online | Render Web Service | Fully Functional |
-| **Database** | 🟢 Online | Supabase | Fully Functional |
-| **AI Worker** | 🔴 **Offline** | Not Deployed | **Skipped to save costs** |
+| **Frontend** |  **[Live Link](https://revaluate-web.onrender.com)** | Render Static Site | Fully Functional |
+| **Backend API** |  Online | Render Web Service | Fully Functional |
+| **Database** |  Online | Supabase | Fully Functional |
+| **AI Worker** |  **Offline** | Not Deployed | **Skipped to save costs** |
 
 
 
 ### Key Innovation
 Unlike manual revaluation systems that take weeks, ReValuate delivers:
-- ✅ **AI-Graded Feedback in Seconds** using Google Gemini 1.5 Flash Vision
-- ✅ **3-Action Teacher Workflow** (Purple/Green/Red buttons for instant decisions)
-- ✅ **Smart Teacher Matching** (Dynamic assignment based on subject expertise)
-- ✅ **PDF to Image AI Grading** (Supports multi-page answer scripts)
-- ✅ **Secure Payments**:Stripe integration for fee processing.
+- **AI-Graded Feedback in Seconds** using Google Gemini 1.5 Flash Vision
+- **3-Action Teacher Workflow** (Purple/Green/Red buttons for instant decisions)
+- **Smart Teacher Matching** (Dynamic assignment based on subject expertise)
+- **PDF to Image AI Grading** (Supports multi-page answer scripts)
+- **Secure Payments**:Stripe integration for fee processing.
 - **Supported Subjects**: Built-in support for Core CS subjects (UX, AIML, PMA, COA, EHS).
 - **Responsive Design**: Mobile-first dashboard for students and faculty.
 
@@ -49,9 +49,9 @@ Unlike manual revaluation systems that take weeks, ReValuate delivers:
 ### For Teachers 
 - **Smart Dashboard**: Dynamic request assignment based on subject specialization
 - **3-Action Workflow**:
-  - 🟣 **Purple (Grade)**: Upload scripts, trigger AI analysis, review & publish
-  - 🟢 **Green (Approve)**: Quick-publish AI score without modifications
-  - 🔴 **Red (Reject)**: Reject invalid requests with reason
+  - **Purple (Grade)**: Upload scripts, trigger AI analysis, review & publish
+  - **Green (Approve)**: Quick-publish AI score without modifications
+  - **Red (Reject)**: Reject invalid requests with reason
 - **AI Assistant**: Regenerate grading analysis with one click
 - **Answer Key Management**: Upload reference materials for accurate grading
 - **Immutable Publishing**: Prevents accidental modifications after publication

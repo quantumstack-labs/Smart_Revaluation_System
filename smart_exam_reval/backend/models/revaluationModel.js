@@ -1,17 +1,24 @@
 const pool = require("../config/db");
+const { nanoid } = require('nanoid'); 
 
 // FIX: Use subjectId (Int) instead of subject_name (String)
 exports.createRequest = async (studentId, subjectId, teacherId) => {
+  // Generate secure alphanumeric tracking ID e.g. REV-9A3B2F
+  const applicationCode = 'REV-' + nanoid(6).toUpperCase();
+
   const query = `
-    INSERT INTO revaluation_requests (student_id, subject_id, teacher_id, status, payment_status)
-    VALUES ($1, $2, $3, 'pending', 'unpaid')
+    INSERT INTO revaluation_requests 
+    (student_id, subject_id, teacher_id, status, payment_status, application_code)
+    VALUES ($1, $2, $3, 'pending', 'unpaid', $4)
     RETURNING *;
   `;
-  // Note: We default status to 'pending' and payment to 'unpaid'
-  const { rows } = await pool.query(query, [studentId, subjectId, teacherId]);
+  const { rows } = await pool.query(query, [studentId, subjectId, teacherId, applicationCode]);
   return rows[0];
 };
 
+/**
+ * @param {string} requestId - Alphanumeric tracking ID (e.g., "REV-9A3B2F"), not an integer
+ */
 exports.updateStatus = async (requestId, status) => {
   const query = `
     UPDATE revaluation_requests
@@ -23,6 +30,9 @@ exports.updateStatus = async (requestId, status) => {
   return rows[0];
 };
 
+/**
+ * @param {string} requestId - Alphanumeric tracking ID (e.g., "REV-9A3B2F"), not an integer
+ */
 exports.publishResult = async (requestId, status, teacherNotes) => {
   const query = `
       UPDATE revaluation_requests
@@ -34,6 +44,9 @@ exports.publishResult = async (requestId, status, teacherNotes) => {
   return rows[0];
 };
 
+/**
+ * @param {string} requestId - Alphanumeric tracking ID (e.g., "REV-9A3B2F"), not an integer
+ */
 exports.updatePayment = async (requestId, paymentStatus) => {
   const query = `
     UPDATE revaluation_requests
@@ -49,7 +62,8 @@ exports.updatePayment = async (requestId, paymentStatus) => {
 exports.getRequestsByStudent = async (studentId) => {
   const query = `
     SELECT 
-      r.id, 
+      r.id,
+      r.application_code, 
       r.status, 
       r.payment_status, 
       r.created_at,
@@ -76,7 +90,9 @@ exports.checkExistingRequest = async (studentId, subjectId) => {
   const { rows } = await pool.query(query, [studentId, subjectId]);
   return rows[0];
 };
-
+/**
+ * @param {string} requestId - Alphanumeric tracking ID (e.g., "REV-9A3B2F"), not an integer
+ */
 exports.addAppeal = async (requestId, reason) => {
   const query = `
       UPDATE revaluation_requests 
