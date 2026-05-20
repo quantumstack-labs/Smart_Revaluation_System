@@ -1,4 +1,4 @@
-const { jest } = require('@jest/globals');
+// const { jest } = require('@jest/globals');
 
 // 1. Mock Supabase
 jest.mock('@supabase/supabase-js', () => {
