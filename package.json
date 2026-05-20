@@ -3,11 +3,10 @@
     "@stripe/react-stripe-js": "^5.4.1",
     "@stripe/stripe-js": "^8.5.3",
     "csv-parser": "^3.2.0",
+    "husky": "^9.1.7",
     "pdf-parse": "^2.4.5"
   },
-  "scripts": {
-    "prepare": "husky install"
-  },
+  "scripts": {},
   "devDependencies": {
     "@commitlint/cli": "^20.2.0",
     "@commitlint/config-conventional": "^20.2.0",
