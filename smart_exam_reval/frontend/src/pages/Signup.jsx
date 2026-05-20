@@ -16,7 +16,6 @@ const PASSWORD_STRENGTH = {
 const PASSWORD_MIN_LENGTH = 6;
 const PASSWORD_STRONG_LENGTH = 8;
 const REGISTER_NUMBER_REGEX = /^[A-Za-z0-9]{6,20}$/;
-
 const Signup = () => {
     // We only need auth state here, not the global loading setter
     const { role, isAuthenticated, signupWithEmail } = useAuth();
@@ -60,36 +59,36 @@ const Signup = () => {
      * @returns {Object} Strength object with level, color, textColor, and width properties
      */
     const calculatePasswordStrength = (password) => {
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasNumbers = /[0-9]/.test(password);
-    const hasSymbols = /[^A-Za-z0-9]/.test(password);
+        if (password.length < PASSWORD_MIN_LENGTH) {
+            return PASSWORD_STRENGTH.WEAK;
+        }
+        const hasUpperCase = /[A-Z]/.test(password);
+        const hasLowerCase = /[a-z]/.test(password);
+        const hasNumbers = /[0-9]/.test(password);
+        const hasSymbols = /[^A-Za-z0-9]/.test(password);
 
-    setPasswordRequirements({
-        minLength: password.length >= PASSWORD_MIN_LENGTH,
-        strongLength: password.length >= PASSWORD_STRONG_LENGTH,
-        hasUpperCase,
-        hasLowerCase,
-        hasNumbers,
-        hasSymbols
-    });
+        // Update requirements state
+        setPasswordRequirements({
+            minLength: password.length >= PASSWORD_MIN_LENGTH,
+            strongLength: password.length >= PASSWORD_STRONG_LENGTH,
+            hasUpperCase,
+            hasLowerCase,
+            hasNumbers,
+            hasSymbols
+        });
 
-    if (
-        password.length >= PASSWORD_STRONG_LENGTH &&
-        hasUpperCase &&
-        hasLowerCase &&
-        hasNumbers &&
-        hasSymbols
-    ) {
-        return PASSWORD_STRENGTH.STRONG;
-    }
+        // Strong: 8+ chars with mixed case, numbers, and symbols
+        if (password.length >= PASSWORD_STRONG_LENGTH && hasUpperCase && hasLowerCase && hasNumbers && hasSymbols) {
+            return PASSWORD_STRENGTH.STRONG;
+        }
 
-    if (password.length >= PASSWORD_MIN_LENGTH) {
-        return PASSWORD_STRENGTH.FAIR;
-    }
+        // Fair: 6+ chars with some variety
+        if (password.length >= PASSWORD_MIN_LENGTH) {
+            return PASSWORD_STRENGTH.FAIR;
+        }
 
-    return PASSWORD_STRENGTH.WEAK;
-};
+        return PASSWORD_STRENGTH.WEAK;
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -111,9 +110,9 @@ const Signup = () => {
             return;
         }
         if (!REGISTER_NUMBER_REGEX.test(formData.registerNumber)) {
-    toast.error("Register Number must be 6-20 alphanumeric characters (e.g., REG2023001)");
-    setIsLoading(false);
-    return;
+            toast.error("Register Number must be 6-20 alphanumeric characters (e.g., REG2023001)");
+            setIsLoading(false);
+            return;
 }
 
         try {
