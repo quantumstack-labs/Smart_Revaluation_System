@@ -7,10 +7,11 @@ import { formatTrackingId } from '../utils/formatters';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     FileText, CheckCircle, Clock, PlusCircle,
-    Search, AlertCircle, X, CreditCard, Loader, BookOpen, Eye
+    Search, AlertCircle, X, CreditCard, Loader, BookOpen, Eye, Inbox
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import AIEvaluationModal from '../components/AIEvaluationModal';
+import EmptyState from '../components/EmptyState';
 
 const StudentDashboard = () => {
     const { user, loading: authLoading } = useAuth();
@@ -248,8 +249,18 @@ const StudentDashboard = () => {
                                         </td>
                                     </tr>
                                 ))}
-                                {subjects.length === 0 && (
-                                    <tr><td colSpan="5" className="p-8 text-center text-slate-500">No Academic Records. Click "Add Missing Subject" to test.</td></tr>
+                                {!loading && subjects.length === 0 && (
+                                    <tr>
+                                        <td colSpan="5">
+                                            <EmptyState
+                                                icon={BookOpen}
+                                                title="No academic records yet"
+                                                message="Add a missing subject to make it available for revaluation requests."
+                                                actionLabel="Add Missing Subject"
+                                                onAction={() => setIsAddSubjectOpen(true)}
+                                            />
+                                        </td>
+                                    </tr>
                                 )}
                             </tbody>
                         </table>
@@ -300,8 +311,16 @@ const StudentDashboard = () => {
                                         </td>
                                     </tr>
                                 ))}
-                                {applications.length === 0 && (
-                                    <tr><td colSpan="6" className="p-8 text-center text-slate-500">No history available.</td></tr>
+                                {!loading && applications.length === 0 && (
+                                    <tr>
+                                        <td colSpan="6">
+                                            <EmptyState
+                                                icon={Inbox}
+                                                title="No revaluation requests yet"
+                                                message="Your submitted requests, status updates, and published reports will appear here."
+                                            />
+                                        </td>
+                                    </tr>
                                 )}
                             </tbody>
                         </table>

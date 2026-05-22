@@ -11,6 +11,7 @@ import Navbar from '../components/Navbar';
 import toast from 'react-hot-toast';
 import UploadModal from '../components/UploadModal';
 import AIEvaluationModal from '../components/AIEvaluationModal';
+import EmptyState from '../components/EmptyState';
 import { API_BASE_URL, API_URL } from '../config';
 
 const TeacherDashboard = () => {
@@ -18,6 +19,7 @@ const TeacherDashboard = () => {
     const [requests, setRequests] = useState([]);
     const [answerKeys, setAnswerKeys] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [answerKeysLoading, setAnswerKeysLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('All'); // 'All', 'Pending', 'Processing', 'Completed', 'My Subjects', 'Answer Keys'
     const [teacherProfile, setTeacherProfile] = useState(null);
 
@@ -50,11 +52,14 @@ const TeacherDashboard = () => {
 
     const fetchAnswerKeys = async () => {
         try {
+            setAnswerKeysLoading(true);
             const headers = await getAuthHeader();
             const response = await api.get('/teacher/keys', { headers });
             setAnswerKeys(response.data);
         } catch (err) {
             console.error("Fetch Keys Error:", err);
+        } finally {
+            setAnswerKeysLoading(false);
         }
     };
 
@@ -283,6 +288,31 @@ const TeacherDashboard = () => {
             : 0
     };
 
+    const requestEmptyStates = {
+        All: {
+            title: 'No revaluation requests',
+            message: 'New revaluation requests assigned to you will appear here.',
+        },
+        Pending: {
+            title: 'No pending requests',
+            message: 'Requests waiting for your review will appear in this tab.',
+        },
+        Processing: {
+            title: 'No requests in progress',
+            message: 'Requests currently being processed or reviewed will appear here.',
+        },
+        Completed: {
+            title: 'No published results',
+            message: 'Published revaluation results will be listed here once grading is complete.',
+        },
+        'My Subjects': {
+            title: 'No requests for your subjects',
+            message: 'Requests matching your subject specialization will appear here.',
+        },
+    };
+
+    const currentRequestEmptyState = requestEmptyStates[activeTab] || requestEmptyStates.All;
+
     const handlePublish = async (updatedData) => {
         const { score, feedback } = updatedData;
 
@@ -418,8 +448,12 @@ const TeacherDashboard = () => {
                             <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
                                 <h3 className="font-bold text-slate-900 dark:text-white">Uploaded Keys</h3>
                             </div>
-                            {answerKeys.length === 0 ? (
-                                <div className="p-8 text-center text-slate-500 italic">No answer keys uploaded yet.</div>
+                            {!answerKeysLoading && answerKeys.length === 0 ? (
+                                <EmptyState
+                                    icon={Key}
+                                    title="No answer keys uploaded"
+                                    message="Upload an answer key PDF above to enable AI-assisted grading for that subject."
+                                />
                             ) : (
                                 <div className="divide-y divide-slate-200 dark:divide-slate-800">
                                     {answerKeys.map((key) => (
@@ -521,8 +555,16 @@ const TeacherDashboard = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-sm">
-                                    {requests.length === 0 ? (
-                                        <tr><td colSpan="7" className="p-12 text-center text-slate-500">No requests found.</td></tr>
+                                    {!isLoading && requests.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="7">
+                                                <EmptyState
+                                                    icon={FileText}
+                                                    title={currentRequestEmptyState.title}
+                                                    message={currentRequestEmptyState.message}
+                                                />
+                                            </td>
+                                        </tr>
                                     ) : (
                                         requests.map((req) => (
                                             <tr key={req.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group">
