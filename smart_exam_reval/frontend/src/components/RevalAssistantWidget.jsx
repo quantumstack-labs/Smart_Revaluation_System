@@ -145,7 +145,11 @@ const RevalAssistantWidget = () => {
       drag
       dragMomentum={false}
       whileHover={{ scale: 1.05 }}
-      className="fixed bottom-6 right-6 z-[9999]"
+      className="fixed z-[9999]"
+      style={{ 
+        right: 'max(1rem, env(safe-area-inset-right))',
+        bottom: 'max(1rem, env(safe-area-inset-bottom))'
+      }}
     >
       {/* Chat Window */}
       <AnimatePresence>
