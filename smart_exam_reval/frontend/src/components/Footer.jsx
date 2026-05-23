@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 
 const Footer = () => {
     return (
+        // Added w-full, max-w-full, and overflow-x-hidden to ensure the footer respects the device width bounds
         <footer className="bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 py-12 border-t border-slate-200 dark:border-slate-800 transition-colors w-full max-w-full overflow-x-hidden">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 w-full">
@@ -31,6 +32,7 @@ const Footer = () => {
                         <h3 className="text-slate-900 dark:text-white font-semibold mb-4">Contact</h3>
                         <ul className="space-y-2">
                             <li className="flex items-center gap-2">
+                                {/* flex-shrink-0 prevents the icon from compressing; break-all ensures long emails wrap properly on mobile */}
                                 <Mail className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
                                 <a href="mailto:smartrevaluationsystem@gmail.com" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors break-all">smartrevaluationsystem@gmail.com</a>
                             </li>

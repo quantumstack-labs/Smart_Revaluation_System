@@ -21,6 +21,7 @@ const Home = () => {
         visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
     };
 
+    // Main layout wrapper: Enforces max-width and overflow-x-hidden to strictly prevent horizontal scrolling on small screens
     return (
         <div className="relative w-full max-w-full overflow-x-hidden min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-violet-500/30 transition-colors duration-200">
             <Navbar />
@@ -30,7 +31,7 @@ const Home = () => {
                 {/* --- HERO SECTION --- */}
                 <section className="relative px-4 sm:px-6 lg:px-8 py-20 lg:py-32 max-w-7xl mx-auto flex flex-col items-center text-center">
                     
-                    {/* Background Effects */}
+                    {/* Background Effects: Wrapped in overflow-hidden to prevent the blur blob from widening the viewport */}
                     <div className="absolute inset-0 overflow-hidden pointer-events-none">
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-violet-600/20 rounded-full blur-[120px]" />
                     </div>
