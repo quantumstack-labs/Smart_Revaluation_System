@@ -15,6 +15,7 @@ const PASSWORD_STRENGTH = {
 
 const PASSWORD_MIN_LENGTH = 6;
 const PASSWORD_STRONG_LENGTH = 8;
+const REGISTER_NUMBER_REGEX = /^[A-Za-z0-9]{6,20}$/;
 
 const Signup = () => {
     // We only need auth state here, not the global loading setter
@@ -109,6 +110,11 @@ const Signup = () => {
             setIsLoading(false);
             return;
         }
+        if (!REGISTER_NUMBER_REGEX.test(formData.registerNumber)) {
+            toast.error("Register Number must be 6-20 alphanumeric characters (e.g., REG2023001)");
+            setIsLoading(false);
+            return;
+}
 
         try {
             const result = await signupWithEmail(

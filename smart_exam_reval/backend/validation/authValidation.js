@@ -12,7 +12,7 @@ exports.registerSchema = Joi.object({
     role: Joi.string()
         .valid("student", "teacher")
         .required(),
-
+     // Regex equivalent: /^[A-Za-z0-9]{6,20}$/
     reg_no: Joi.string()
         .alphanum()
         .min(6)

@@ -7,7 +7,11 @@ import { formatTrackingId } from '../utils/formatters';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     FileText, CheckCircle, Clock, PlusCircle,
+<<<<<<< HEAD
     Search, AlertCircle, X, CreditCard, Loader, BookOpen, Eye, Inbox
+=======
+    Search, AlertCircle, X, CreditCard, Loader, BookOpen, Eye, Copy
+>>>>>>> main
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import AIEvaluationModal from '../components/AIEvaluationModal';
@@ -94,6 +98,10 @@ const StudentDashboard = () => {
         } finally {
             setLoading(false);
         }
+    };
+    const handleCopyId = (id) => {
+        navigator.clipboard.writeText(id);
+        toast.success("Tracking ID copied!");
     };
 
     const updateStats = (data) => {
@@ -288,9 +296,18 @@ const StudentDashboard = () => {
                                 {applications.map((app) => (
                                     <tr key={app.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                         <td className="p-4 font-mono text-slate-600 dark:text-slate-500">
-                                            <span title={app.application_code || app.id}>
-                                                {formatTrackingId(app.application_code || `#${app.id}`)}
-                                            </span>
+                                            <div className="flex items-center gap-2">
+                                                <span title={app.application_code || app.id}>
+                                                    {formatTrackingId(app.application_code || `#${app.id}`)}
+                                                </span>
+                                                <button
+                                                    onClick={() => handleCopyId(app.application_code || app.id)}
+                                                    className="text-slate-500 hover:text-violet-400 transition-colors"
+                                                    title="Copy full Tracking ID"
+                                                >
+                                                    <Copy className="w-3.5 h-3.5" />
+                                                </button>
+                                            </div>
                                         </td>
                                         <td className="p-4 text-slate-900 dark:text-white">{app.subject_code}</td>
                                         <td className="p-4"><StatusBadge status={app.status} /></td>

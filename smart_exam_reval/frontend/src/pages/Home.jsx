@@ -21,17 +21,20 @@ const Home = () => {
         visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
     };
 
+    // Main layout wrapper: Enforces max-width and overflow-x-hidden to strictly prevent horizontal scrolling on small screens
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-violet-500/30 transition-colors duration-200">
+        <div className="relative w-full max-w-full overflow-x-hidden min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-violet-500/30 transition-colors duration-200">
             <Navbar />
 
             <main className="pt-24">
 
                 {/* --- HERO SECTION --- */}
-                <section className="relative px-6 py-20 lg:py-32 max-w-7xl mx-auto flex flex-col items-center text-center">
+                <section className="relative px-4 sm:px-6 lg:px-8 py-20 lg:py-32 max-w-7xl mx-auto flex flex-col items-center text-center">
                     
-                    {/* Background Effects */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-violet-600/20 rounded-full blur-[120px] pointer-events-none" />
+                    {/* Background Effects: Wrapped in overflow-hidden to prevent the blur blob from widening the viewport */}
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-violet-600/20 rounded-full blur-[120px]" />
+                    </div>
 
                     <motion.div
                         initial="hidden" animate="visible" variants={fadeInUp}
@@ -95,7 +98,7 @@ const Home = () => {
                 </section>
 
                 {/* --- WHY CHOOSE SECTION --- */}
-                <section className="px-6 py-20 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900">
+                <section className="px-4 sm:px-6 lg:px-8 py-20 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900">
                     <div className="max-w-7xl mx-auto">
                         <div className="text-center mb-16">
                             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4">Why Choose ReValuate?</h2>
@@ -104,7 +107,7 @@ const Home = () => {
                             </p>
                         </div>
 
-                        <div className="grid md:grid-cols-3 gap-8">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full">
                             <FeatureCard 
                                 icon={<Brain className="h-8 w-8 text-blue-600 dark:text-blue-400" />}
                                 title="AI-Assisted Grading"
@@ -125,12 +128,12 @@ const Home = () => {
                 </section>
 
                 {/* --- HOW IT WORKS SECTION --- */}
-                <section className="px-6 py-20 bg-slate-50 dark:bg-slate-900/50 border-y border-slate-200 dark:border-slate-800">
+                <section className="px-4 sm:px-6 lg:px-8 py-20 bg-slate-50 dark:bg-slate-900/50 border-y border-slate-200 dark:border-slate-800">
                     <div className="max-w-7xl mx-auto text-center">
                         <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4">How It Works</h2>
                         <p className="text-slate-600 dark:text-slate-400 mb-16">Simple steps to get your revaluation done.</p>
 
-                        <div className="grid md:grid-cols-4 gap-8 relative">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 w-full relative">
                             {/* Connector Line (Desktop) */}
                             <div className="hidden md:block absolute top-12 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-slate-300 dark:via-slate-700 to-transparent" />
 
@@ -155,7 +158,7 @@ const Home = () => {
 const FeatureCard = ({ icon, title, desc }) => (
     <motion.div 
         whileHover={{ y: -5 }}
-        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-3xl hover:border-slate-300 dark:hover:border-slate-700 transition-colors shadow-sm"
+        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-3xl hover:border-slate-300 dark:hover:border-slate-700 transition-colors shadow-sm min-w-0"
     >
         <div className="h-14 w-14 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-6 border border-slate-200 dark:border-slate-700">
             {icon}
@@ -166,7 +169,7 @@ const FeatureCard = ({ icon, title, desc }) => (
 );
 
 const StepCard = ({ number, title, desc }) => (
-    <div className="relative z-10 flex flex-col items-center">
+    <div className="relative z-10 flex flex-col items-center min-w-0">
         <div className="w-12 h-12 rounded-full bg-white dark:bg-slate-950 border-4 border-slate-200 dark:border-slate-800 flex items-center justify-center text-xl font-bold text-slate-900 dark:text-white mb-6 shadow-xl">
             {number}
         </div>

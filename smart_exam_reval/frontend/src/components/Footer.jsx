@@ -4,10 +4,11 @@ import { Link } from 'react-router-dom';
 
 const Footer = () => {
     return (
-        <footer className="bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 py-12 border-t border-slate-200 dark:border-slate-800 transition-colors">
+        // Added w-full, max-w-full, and overflow-x-hidden to ensure the footer respects the device width bounds
+        <footer className="bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 py-12 border-t border-slate-200 dark:border-slate-800 transition-colors w-full max-w-full overflow-x-hidden">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-                    <div className="col-span-1 md:col-span-2">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 w-full">
+                    <div className="col-span-1 md:col-span-2 min-w-0">
                         <div className="flex items-center gap-2 mb-4">
                             <GraduationCap className="h-8 w-8 text-blue-600 dark:text-blue-500" />
                             <span className="text-2xl font-bold text-slate-900 dark:text-white">ReValuate</span>
@@ -17,7 +18,7 @@ const Footer = () => {
                         </p>
                     </div>
 
-                    <div>
+                    <div className="min-w-0">
                         <h3 className="text-slate-900 dark:text-white font-semibold mb-4">Quick Links</h3>
                         <ul className="space-y-2">
                             <li><Link to="/home" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Home</Link></li>
@@ -27,12 +28,13 @@ const Footer = () => {
                         </ul>
                     </div>
 
-                    <div>
+                    <div className="min-w-0">
                         <h3 className="text-slate-900 dark:text-white font-semibold mb-4">Contact</h3>
                         <ul className="space-y-2">
                             <li className="flex items-center gap-2">
-                                <Mail className="w-4 h-4" aria-hidden="true" />
-                                <a href="mailto:smartrevaluationsystem@gmail.com" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">smartrevaluationsystem@gmail.com</a>
+                                {/* flex-shrink-0 prevents the icon from compressing; break-all ensures long emails wrap properly on mobile */}
+                                <Mail className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+                                <a href="mailto:smartrevaluationsystem@gmail.com" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors break-all">smartrevaluationsystem@gmail.com</a>
                             </li>
                             <li>Chennai,Tamil Nadu</li>
                         </ul>
