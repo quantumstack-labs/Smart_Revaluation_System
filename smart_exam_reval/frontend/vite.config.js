@@ -67,8 +67,5 @@ export default defineConfig({
   },
   build: {
     sourcemap: false, // Prevents code theft/inspection
-  },
-  test: {
-    environment: 'jsdom',
   }
 })
