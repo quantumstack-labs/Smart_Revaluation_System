@@ -2,6 +2,7 @@ const { generateGrading } = require("../utils/aiService");
 const pool = require("../config/db");
 const fs = require('fs');
 const path = require('path');
+const logger = require("../config/logger");
 
 // Controller for handling AI Grading Logic with Vision
 exports.gradeRequest = async (req, res, next) => {
@@ -24,8 +25,8 @@ exports.gradeRequest = async (req, res, next) => {
 
         if (!request) return res.status(404).json({ message: "Request not found" });
 
-        console.log(` Request subject_code: "${request.subject_code}", subject_name: "${request.subject_name}"`);
-        console.log(` Comparing subject_code (JSON):`, JSON.stringify(request.subject_code));
+        logger.debug(`Request subject_code: "${request.subject_code}", subject_name: "${request.subject_name}"`);
+        logger.debug(`Comparing subject_code (JSON): ${JSON.stringify(request.subject_code)}`);
 
         // 2. Check if answer sheet images are uploaded
         if (!request.answer_script_urls || request.answer_script_urls.length === 0) {
@@ -35,10 +36,10 @@ exports.gradeRequest = async (req, res, next) => {
         }
 
         // 3. Fetch Official Answer Key with DEEP DEBUG
-        console.log(`\n🔍 ========== DEEP DEBUG: ANSWER KEY LOOKUP ==========`);
-        console.log(` Request ID: ${requestId}`);
-        console.log(` Looking for subject_code: "${request.subject_code}" (JSON: ${JSON.stringify(request.subject_code)})`);
-        console.log(` Teacher ID from auth: ${req.user?.id}`);
+        logger.debug("🔍 ========== DEEP DEBUG: ANSWER KEY LOOKUP ==========");
+        logger.debug(`Request ID: ${requestId}`);
+        logger.debug(`Looking for subject_code: "${request.subject_code}" (JSON: ${JSON.stringify(request.subject_code)})`);
+        logger.debug(`Teacher ID from auth: ${req.user?.id}`);
 
         // First, check ALL answer keys in the database
         const allKeys = await pool.query(
@@ -48,9 +49,9 @@ exports.gradeRequest = async (req, res, next) => {
              FROM answer_keys 
              ORDER BY created_at DESC LIMIT 10`
         );
-        console.log(`\n All Answer Keys in Database (last 10):`);
+        logger.debug("All Answer Keys in Database (last 10):");
         allKeys.rows.forEach(k => {
-            console.log(`   • ID:${k.id} | Code:"${k.subject_code}" | Teacher:${k.teacher_id} | Status:${k.status} | Text:${k.text_length} chars | Date:${k.created_at}`);
+            logger.debug(`   • ID:${k.id} | Code:"${k.subject_code}" | Teacher:${k.teacher_id} | Status:${k.status} | Text:${k.text_length} chars | Date:${k.created_at}`);
         });
 
         //  Use ILIKE for robust case-insensitive matching
@@ -142,7 +143,7 @@ exports.gradeRequest = async (req, res, next) => {
         });
 
     } catch (error) {
-        console.error("AI Controller Error:", error);
+        logger.error("AI Controller Error", error);
         next(error);
     }
 };

@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const nodemailer = require('nodemailer'); // 1. Import Nodemailer
 const path = require('path');
 const fs = require('fs');
+const logger = require('./config/logger');
 require('dotenv').config();
 
 const pool = require('./config/db');
@@ -17,6 +18,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const revaluationRoutes = require('./routes/revaluationRoutes');
 const teacherKeyRoutes = require('./routes/teacherKeyRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const publicRoutes = require('./routes/publicRoutes');
 const aiController = require('./controllers/aiController');
 const { protect, teacherOnly } = require('./middleware/auth');
 
@@ -43,13 +45,13 @@ const scriptsDir = path.join(uploadsDir, 'answer_scripts');
 [uploadsDir, tempDir, scriptsDir].forEach(dir => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
-    console.log(`Created directory: ${dir}`);
+    logger.info(`Created directory: ${dir}`);
   }
 });
 
 // DEBUG: Log all requests
 app.use((req, res, next) => {
-  console.log(`[REQUEST] ${req.method} ${req.url}`);
+  logger.debug(`[REQUEST] ${req.method} ${req.url}`);
   next();
 });
 
@@ -109,10 +111,10 @@ app.post('/api/student/send-receipt', protect, async (req, res) => {
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log(` Receipt sent to ${email}`);
+    logger.info(`Receipt sent to ${email}`);
     res.json({ success: true, message: 'Receipt sent successfully' });
   } catch (error) {
-    console.error("Email Error:", error);
+    logger.error("Email Error", error);
     res.status(500).json({ error: 'Failed to send email' });
   }
 });
@@ -126,6 +128,7 @@ app.use('/api/teacher', teacherRoutes);
 app.use('/api/teacher', teacherProfileRoutes); // Profile routes for teachers
 app.use('/api/teacher', teacherKeyRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/public', publicRoutes);
 
 // Direct Route for AI Grading
 app.post('/api/teacher/grade', protect, teacherOnly, aiController.gradeRequest);
@@ -137,7 +140,7 @@ app.get('/', (req, res) => {
 
 // --- Global Error Handler ---
 app.use((err, req, res, next) => {
-  console.error("Server Error:", err.stack);
+  logger.error("Server Error", err);
   res.status(err.status || 500).json({
     message: err.message || 'Internal Server Error',
     error: process.env.NODE_ENV === 'development' ? err : {}
@@ -146,12 +149,16 @@ app.use((err, req, res, next) => {
 
 // --- Server Startup ---
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, async () => {
-  try {
-    await pool.query('SELECT NOW()'); // Test DB Connection
-    console.log(`Server running on port ${PORT}`);
-    console.log(` Database Connected`);
-  } catch (err) {
-    console.error(" Database Connection Failed:", err);
-  }
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, async () => {
+    try {
+      await pool.query('SELECT NOW()'); // Test DB Connection
+      logger.info(`Server running on port ${PORT}`);
+      logger.info(`Database Connected`);
+    } catch (err) {
+      logger.error("Database Connection Failed", err);
+    }
+  });
+}
+
+module.exports = app;

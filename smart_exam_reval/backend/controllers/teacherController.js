@@ -4,6 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
 const pdf = require('pdf-parse');
+const logger = require('../config/logger');
 
 // @desc    Get all requests relevant to this teacher (Assigned + Matching Unassigned)
 // @route   GET /api/teacher/dashboard
@@ -28,9 +29,30 @@ exports.getTeacherRequests = async (req, res, next) => {
 
         
         const trimmedSpec = subject_specialization ? subject_specialization.trim() : "";
-       
+        logger.debug(`Teacher Spec: "${subject_specialization}" (Length: ${subject_specialization ? subject_specialization.length : 0})`);
+        logger.debug(`Trimmed Spec: "${trimmedSpec}" (Length: ${trimmedSpec.length})`);
 
-        
+        // Diagnostic check for any PMA request (Only run in development mode to save DB queries & prevent test mocks issues)
+        if (process.env.NODE_ENV === 'development') {
+            try {
+                const diagQuery = `
+            SELECT r.id, r.teacher_id, m.subject_code, m.subject_name, r.status 
+            FROM revaluation_requests r 
+            LEFT JOIN marks m ON r.subject_id = m.id 
+            WHERE m.subject_code ILIKE '%PMA%' OR m.subject_name ILIKE '%PMA%'
+            LIMIT 5
+          `;
+                const diagRes = await pool.query(diagQuery);
+                if (diagRes.rows.length > 0) {
+                    logger.debug(`Found ${diagRes.rows.length} PMA-related requests: ${JSON.stringify(diagRes.rows)}`);
+                } else {
+                    logger.debug('No PMA-related requests found in DB.');
+                }
+            } catch (diagErr) {
+                logger.error('Diagnostic Query Failed', diagErr);
+            }
+        }
+        // ---------------------------------------
 
         // 2. Fetch Requests
         // Action: Rewrite the WHERE clause to be ultra-robust

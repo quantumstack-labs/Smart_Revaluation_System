@@ -1,4 +1,4 @@
-const { jest } = require('@jest/globals');
+// const { jest } = require('@jest/globals');
 
 // --- MOCKS ---
 
@@ -70,8 +70,7 @@ jest.mock('ioredis', () => {
     }));
 });
 
-// Mock console
-global.console = { ...console, log: jest.fn(), warn: jest.fn(), error: jest.fn() };
+// global.console = { ...console, log: jest.fn(), warn: jest.fn(), error: jest.fn() };
 
 // --- IMPORTS ---
 const request = require('supertest');
@@ -159,11 +158,12 @@ describe('Full Lifecycle Test: Revaluation Flow', () => {
         });
 
         pool.query
-            .mockResolvedValueOnce({ rows: [{ id: 'teacher-1', role: 'teacher' }] })
-            .mockResolvedValueOnce({ rows: [{ id: 500, status: 'COMPLETED' }], rowCount: 1 });
+            .mockResolvedValueOnce({ rows: [{ id: 'teacher-1', role: 'teacher' }] }) // Middleware auth check
+            .mockResolvedValueOnce({ rows: [{ id: 500, student_id: 'student-123', student_email: 'student@test.com', student_name: 'Test Student', subject_code: 'MATH101', subject_name: 'Mathematics' }] }) // requestDataQuery check
+            .mockResolvedValueOnce({ rows: [{ id: 500, status: 'COMPLETED' }], rowCount: 1 }); // updateQuery execution
 
         const res = await request(app)
-            .put('/api/teacher/update-status')
+            .put('/api/teacher/request/status')
             .set('Authorization', 'Bearer teacher-token')
             .send({
                 requestId: 500,
@@ -175,18 +175,26 @@ describe('Full Lifecycle Test: Revaluation Flow', () => {
     });
 
     it('Step 5: Public user checks status', async () => {
-        pool.query
-            .mockResolvedValueOnce({
-                rows: [{
-                    application_id: 'uuid-500',
-                    status: 'COMPLETED',
-                    student_name: 'Rahul Kumar',
-                    subject_code: 'MATH101'
-                }]
-            });
+        const { createClient } = require('@supabase/supabase-js');
+        createClient.mockImplementationOnce(() => ({
+            from: jest.fn(() => ({
+                select: jest.fn().mockReturnThis(),
+                eq: jest.fn().mockReturnThis(),
+                single: jest.fn().mockResolvedValue({
+                    data: {
+                        id: 'a0000000-0000-0000-0000-000000000500',
+                        status: 'COMPLETED',
+                        created_at: new Date().toISOString(),
+                        users: { full_name: 'Rahul Kumar' },
+                        subjects: { code: 'MATH101', name: 'Mathematics' }
+                    },
+                    error: null
+                })
+            }))
+        }));
 
         const res = await request(app)
-            .get('/api/public/status/500');
+            .get('/api/public/status/a0000000-0000-0000-0000-000000000500');
 
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe('COMPLETED');
