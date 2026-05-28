@@ -1,5 +1,6 @@
 const pool = require('../config/db'); // Ensure this path matches your project structure
 const sendEmail = require("../utils/email"); // Ensure you have this utility or remove if unused
+const { getTeacherDashboardList } = require("../services/revaluationRequestListService");
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
@@ -9,94 +10,18 @@ const pdf = require('pdf-parse');
 // @route   GET /api/teacher/dashboard
 exports.getTeacherRequests = async (req, res, next) => {
     try {
-        const userId = req.user.id;
-
-        // 1. Fetch Teacher Details
-        const teacherQuery = `
-      SELECT id, full_name, department, subject_specialization 
-      FROM users 
-      WHERE id = $1 AND role = 'teacher'
-    `;
-        const teacherResult = await pool.query(teacherQuery, [userId]);
-        const teacher = teacherResult.rows[0];
-
-        if (!teacher) {
-            return res.status(404).json({ message: "Teacher profile not found" });
+        const data = await getTeacherDashboardList(req.user.id, req.query);
+        if (data.error) {
+            return res.status(data.error.status).json({ message: data.error.message });
         }
 
-        const { subject_specialization } = teacher; // We ignore 'department' for matching now
-
-        
-        const trimmedSpec = subject_specialization ? subject_specialization.trim() : "";
-       
-
-        
-
-        // 2. Fetch Requests
-        // Action: Rewrite the WHERE clause to be ultra-robust
-        const requestsQuery = `
-      SELECT 
-        r.id AS request_id,
-        u.full_name AS student_name,
-        u.reg_no,
-        u.department AS student_department,
-        COALESCE(m.subject_name, 'Unknown Subject') AS subject_name,
-        COALESCE(m.subject_code, 'N/A') AS subject_code,
-        m.score AS original_score,
-        r.status,
-        r.payment_status,
-        r.amount_paid,
-        r.ai_feedback,
-        r.ocr_data,
-        r.created_at,
-        r.teacher_id
-      FROM revaluation_requests r
-      LEFT JOIN users u ON r.student_id = u.id
-      LEFT JOIN marks m ON r.subject_id = m.id
-      WHERE 
-        -- Exclude only DRAFT requests (include PUBLISHED for Completed tab)
-        UPPER(r.status::text) NOT IN ('DRAFT')
-        AND (
-          -- ONLY show requests that match teacher's specialization OR are directly assigned
-          (
-            -- A. Directly Assigned to this teacher AND specialization matches
-            r.teacher_id = $1
-            AND (
-              $2::text IS NULL 
-              OR TRIM($2) = ''
-              OR UPPER(COALESCE(m.subject_code, '')) LIKE '%' || UPPER(TRIM($2)) || '%' 
-              OR UPPER(COALESCE(m.subject_name, '')) LIKE '%' || UPPER(TRIM($2)) || '%'
-            )
-          )
-          OR (
-            -- B. Smart Match: Unassigned requests that match specialization
-            r.teacher_id IS NULL 
-            AND $2::text IS NOT NULL
-            AND TRIM($2) != ''
-            AND (
-                 -- Match subject_code OR subject_name with teacher's specialization
-                 UPPER(COALESCE(m.subject_code, '')) LIKE '%' || UPPER(TRIM($2)) || '%' 
-                 OR 
-                 UPPER(COALESCE(m.subject_name, '')) LIKE '%' || UPPER(TRIM($2)) || '%'
-            )
-          )
-        )
-      ORDER BY r.created_at DESC;
-    `;
-
-        const requestsResult = await pool.query(requestsQuery, [
-            userId,
-            trimmedSpec || null
-        ]);
-        
         if (process.env.NODE_ENV === 'development') {
-            console.log(`Found ${requestsResult.rows.length} requests.`);
+            console.log(
+                `Found ${data.revaluation_requests.length} requests (page ${data.pagination?.page}, total ${data.pagination?.total}).`
+            );
         }
-        res.json({
-            teacher_info: teacher,
-            revaluation_requests: requestsResult.rows
-        });
 
+        res.json(data);
     } catch (err) {
         console.error("Error in getTeacherRequests:", err);
         res.status(500).json({ message: "Server Error", error: err.message });

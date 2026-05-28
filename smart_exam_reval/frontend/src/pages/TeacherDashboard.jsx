@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabase';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
@@ -11,17 +11,38 @@ import Navbar from '../components/Navbar';
 import toast from 'react-hot-toast';
 import UploadModal from '../components/UploadModal';
 import AIEvaluationModal from '../components/AIEvaluationModal';
-import EmptyState from '../components/EmptyState';
 import { API_BASE_URL, API_URL } from '../config';
+import { mapTeacherDashboardRequests } from '../utils/mapRevaluationRequests';
+import RevaluationRequestFilters from '../components/RevaluationRequestFilters';
+import HighlightText from '../components/HighlightText';
+import {
+    DEFAULT_PAGE_SIZE,
+    STATUS_LABELS,
+    buildSubjectOptionsFromRows,
+    buildFilterParamsFromState,
+} from '../constants/revaluationFilters';
 
 const TeacherDashboard = () => {
     const { user } = useAuth();
-    const [requests, setRequests] = useState([]);
+    const [allRequests, setAllRequests] = useState([]);
     const [answerKeys, setAnswerKeys] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [answerKeysLoading, setAnswerKeysLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('All'); // 'All', 'Pending', 'Processing', 'Completed', 'My Subjects', 'Answer Keys'
     const [teacherProfile, setTeacherProfile] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedDepartment, setSelectedDepartment] = useState('All');
+    const [selectedPayment, setSelectedPayment] = useState('All');
+    const [selectedStatus, setSelectedStatus] = useState('All');
+    const [selectedSubject, setSelectedSubject] = useState('All');
+    const [dateFrom, setDateFrom] = useState('');
+    const [dateTo, setDateTo] = useState('');
+    const [page, setPage] = useState(1);
+    const [pagination, setPagination] = useState({
+        page: 1,
+        limit: DEFAULT_PAGE_SIZE,
+        total: 0,
+        totalPages: 1,
+    });
 
     // Grading Modal State
     const [selectedRequest, setSelectedRequest] = useState(null);
@@ -40,10 +61,67 @@ const TeacherDashboard = () => {
 
     useEffect(() => {
         if (user) {
-            fetchRequests();
             fetchAnswerKeys();
         }
-    }, [user, activeTab]);
+    }, [user]);
+
+    useEffect(() => {
+        if (!user) return;
+
+        const delay = searchQuery.trim() ? 300 : 0;
+        const timer = setTimeout(() => fetchRequests(), delay);
+        return () => clearTimeout(timer);
+    }, [user, searchQuery, selectedDepartment, selectedPayment, selectedStatus, selectedSubject, dateFrom, dateTo, page]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [searchQuery, selectedDepartment, selectedPayment, selectedStatus, selectedSubject, dateFrom, dateTo]);
+
+    const subjectOptions = useMemo(
+        () => buildSubjectOptionsFromRows(allRequests),
+        [allRequests]
+    );
+
+    const filterState = useMemo(
+        () => ({
+            search: searchQuery,
+            department: selectedDepartment,
+            payment: selectedPayment,
+            status: selectedStatus,
+            subject: selectedSubject,
+            dateFrom,
+            dateTo,
+            page,
+            limit: DEFAULT_PAGE_SIZE,
+        }),
+        [searchQuery, selectedDepartment, selectedPayment, selectedStatus, selectedSubject, dateFrom, dateTo, page]
+    );
+
+    /** Tab-filtered list (before search) — same source for mock and API data */
+    const requests = useMemo(() => {
+        let list = allRequests;
+
+        if (activeTab === 'Pending') {
+            list = list.filter((r) => ['SUBMITTED'].includes(r.status));
+        } else if (activeTab === 'Processing') {
+            list = list.filter((r) => ['PROCESSING', 'TEACHER_REVIEW'].includes(r.status));
+        } else if (activeTab === 'Completed') {
+            list = list.filter((r) => r.status === 'PUBLISHED');
+        } else if (activeTab === 'My Subjects') {
+            const spec = teacherProfile?.specialization?.toLowerCase();
+            if (spec) {
+                list = list.filter(
+                    (r) => r.subject_code && r.subject_code.toLowerCase() === spec
+                );
+            }
+        }
+
+        return list;
+    }, [allRequests, activeTab, teacherProfile]);
+
+    const setRequests = (updater) => {
+        setAllRequests((prev) => (typeof updater === 'function' ? updater(prev) : updater));
+    };
 
     const getAuthHeader = async () => {
         const { data: { session } } = await supabase.auth.getSession();
@@ -52,14 +130,11 @@ const TeacherDashboard = () => {
 
     const fetchAnswerKeys = async () => {
         try {
-            setAnswerKeysLoading(true);
             const headers = await getAuthHeader();
             const response = await api.get('/teacher/keys', { headers });
             setAnswerKeys(response.data);
         } catch (err) {
             console.error("Fetch Keys Error:", err);
-        } finally {
-            setAnswerKeysLoading(false);
         }
     };
 
@@ -96,50 +171,41 @@ const TeacherDashboard = () => {
         }
     };
 
+    const buildDashboardApiParams = () => buildFilterParamsFromState(filterState);
+
     const fetchRequests = async () => {
         try {
             setIsLoading(true);
-            const headers = await getAuthHeader();
 
-            // Call the new Smart Matching endpoint
-            const response = await api.get('/api/teacher/dashboard', { headers });
+            const headers = await getAuthHeader();
+            const response = await api.get('/api/teacher/dashboard', {
+                headers,
+                params: buildDashboardApiParams(),
+            });
 
             let rawRequests = [];
-            // Handle new response format: { teacher_info, revaluation_requests: [...] }
-            if (response.data && response.data.revaluation_requests) {
+            let teacherInfo = null;
+
+            if (response.data?.revaluation_requests) {
                 rawRequests = response.data.revaluation_requests;
-                // Store teacher profile info
-                if (response.data.teacher_info) {
-                    setTeacherProfile(response.data.teacher_info);
-                }
+                setPagination(
+                    response.data?.pagination ?? {
+                        page: 1,
+                        limit: DEFAULT_PAGE_SIZE,
+                        total: rawRequests.length,
+                        totalPages: 1,
+                    }
+                );
+                teacherInfo = response.data.teacher_info;
             } else if (Array.isArray(response.data)) {
-                rawRequests = response.data; // Fallback
+                rawRequests = response.data;
             }
 
-            // Map to frontend structure
-            const allRequests = rawRequests.map(r => ({
-                ...r,
-                id: r.request_id, // Map database column 'request_id' to frontend 'id'
-                users: {
-                    full_name: r.student_name,
-                    reg_no: r.reg_no,
-                    department: r.student_department
-                },
-                ai_status: r.ai_feedback ? 'Graded' : 'Pending'
-            }));
-
-            // Client-side filtering for Tabs
-            let filtered = allRequests;
-            if (activeTab === 'Pending') filtered = allRequests.filter(r => ['SUBMITTED'].includes(r.status));
-            if (activeTab === 'Processing') filtered = allRequests.filter(r => ['PROCESSING', 'TEACHER_REVIEW'].includes(r.status));
-            if (activeTab === 'Completed') filtered = allRequests.filter(r => r.status === 'PUBLISHED');
-            if (activeTab === 'My Subjects') {
-                // Get unique subjects from all requests
-                const subjects = [...new Set(allRequests.map(r => r.subject_code))];
-                filtered = allRequests.filter(r => subjects.includes(r.subject_code));
+            if (teacherInfo) {
+                setTeacherProfile(teacherInfo);
             }
 
-            setRequests(filtered);
+            setAllRequests(mapTeacherDashboardRequests(rawRequests));
         } catch (err) {
             console.error("Fetch error:", err);
             toast.error("Failed to load requests");
@@ -271,7 +337,7 @@ const TeacherDashboard = () => {
     // --- PUBLISH ACTION ---
     // Calculate My Subjects statistics
     const mySubjectRequests = teacherProfile?.specialization
-        ? requests.filter(r =>
+        ? allRequests.filter(r =>
             r.subject_code &&
             r.subject_code.toLowerCase() === teacherProfile.specialization.toLowerCase()
         )
@@ -287,31 +353,6 @@ const TeacherDashboard = () => {
             ).length
             : 0
     };
-
-    const requestEmptyStates = {
-        All: {
-            title: 'No revaluation requests',
-            message: 'New revaluation requests assigned to you will appear here.',
-        },
-        Pending: {
-            title: 'No pending requests',
-            message: 'Requests waiting for your review will appear in this tab.',
-        },
-        Processing: {
-            title: 'No requests in progress',
-            message: 'Requests currently being processed or reviewed will appear here.',
-        },
-        Completed: {
-            title: 'No published results',
-            message: 'Published revaluation results will be listed here once grading is complete.',
-        },
-        'My Subjects': {
-            title: 'No requests for your subjects',
-            message: 'Requests matching your subject specialization will appear here.',
-        },
-    };
-
-    const currentRequestEmptyState = requestEmptyStates[activeTab] || requestEmptyStates.All;
 
     const handlePublish = async (updatedData) => {
         const { score, feedback } = updatedData;
@@ -343,6 +384,32 @@ const TeacherDashboard = () => {
         }
     };
 
+    const filteredRequests = requests;
+
+    const hasActiveFilters =
+        searchQuery.trim() !== '' ||
+        selectedDepartment !== 'All' ||
+        selectedPayment !== 'All' ||
+        selectedStatus !== 'All' ||
+        selectedSubject !== 'All' ||
+        dateFrom !== '' ||
+        dateTo !== '';
+
+    const clearFilters = () => {
+        setSearchQuery('');
+        setSelectedDepartment('All');
+        setSelectedPayment('All');
+        setSelectedStatus('All');
+        setSelectedSubject('All');
+        setDateFrom('');
+        setDateTo('');
+        setPage(1);
+    };
+
+    const totalCount = pagination.total ?? filteredRequests.length;
+    const resultLabel =
+        totalCount === 1 ? '1 record found' : `${totalCount} records found`;
+
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-violet-500/30 transition-colors duration-200 pb-32">
 
@@ -356,7 +423,7 @@ const TeacherDashboard = () => {
                         <div className="flex items-center gap-3 mt-2 text-slate-500 dark:text-slate-400 text-sm">
                             <span className="flex items-center gap-1"><LayoutDashboard className="w-4 h-4" /> Professor</span>
                             <span className="w-1 h-1 bg-slate-300 dark:bg-slate-600 rounded-full"></span>
-                            <span>Department: Computer Science</span>
+                            <span>Department: {teacherProfile?.department || 'Computer Science'}</span>
                         </div>
                     </div>
                 </div>
@@ -365,25 +432,25 @@ const TeacherDashboard = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <StatsCard
                         title="Total Requests"
-                        value={requests.filter(r => r.status !== 'PUBLISHED').length}
+                        value={allRequests.filter(r => r.status !== 'PUBLISHED').length}
                         icon={<FileText className="w-5 h-5" />}
                         color="blue"
                     />
                     <StatsCard
                         title="Pending"
-                        value={requests.filter(r => r.status === 'SUBMITTED').length}
+                        value={allRequests.filter(r => r.status === 'SUBMITTED').length}
                         icon={<Clock className="w-5 h-5" />}
                         color="amber"
                     />
                     <StatsCard
                         title="Processing"
-                        value={requests.filter(r => ['PROCESSING', 'TEACHER_REVIEW'].includes(r.status)).length}
+                        value={allRequests.filter(r => ['PROCESSING', 'TEACHER_REVIEW'].includes(r.status)).length}
                         icon={<Loader2 className="w-5 h-5" />}
                         color="purple"
                     />
                     <StatsCard
                         title="Completed"
-                        value={requests.filter(r => r.status === 'PUBLISHED').length}
+                        value={allRequests.filter(r => r.status === 'PUBLISHED').length}
                         icon={<CheckCircle className="w-5 h-5" />}
                         color="green"
                     />
@@ -448,12 +515,8 @@ const TeacherDashboard = () => {
                             <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
                                 <h3 className="font-bold text-slate-900 dark:text-white">Uploaded Keys</h3>
                             </div>
-                            {!answerKeysLoading && answerKeys.length === 0 ? (
-                                <EmptyState
-                                    icon={Key}
-                                    title="No answer keys uploaded"
-                                    message="Upload an answer key PDF above to enable AI-assisted grading for that subject."
-                                />
+                            {answerKeys.length === 0 ? (
+                                <div className="p-8 text-center text-slate-500 italic">No answer keys uploaded yet.</div>
                             ) : (
                                 <div className="divide-y divide-slate-200 dark:divide-slate-800">
                                     {answerKeys.map((key) => (
@@ -540,6 +603,33 @@ const TeacherDashboard = () => {
                             </div>
                         )}
 
+                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 mb-4 shadow-sm dark:shadow-none">
+                            <RevaluationRequestFilters
+                                role="teacher"
+                                showDateRange
+                                searchQuery={searchQuery}
+                                onSearchChange={setSearchQuery}
+                                selectedDepartment={selectedDepartment}
+                                onDepartmentChange={setSelectedDepartment}
+                                selectedPayment={selectedPayment}
+                                onPaymentChange={setSelectedPayment}
+                                selectedStatus={selectedStatus}
+                                onStatusChange={setSelectedStatus}
+                                selectedSubject={selectedSubject}
+                                onSubjectChange={setSelectedSubject}
+                                subjectOptions={subjectOptions}
+                                dateFrom={dateFrom}
+                                onDateFromChange={setDateFrom}
+                                dateTo={dateTo}
+                                onDateToChange={setDateTo}
+                                onClear={hasActiveFilters ? clearFilters : undefined}
+                                resultLabel={resultLabel}
+                                page={pagination.page}
+                                totalPages={pagination.totalPages}
+                                onPageChange={setPage}
+                            />
+                        </div>
+
                         {/* --- REQUESTS TABLE --- */}
                         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm dark:shadow-xl animate-fade-in overflow-x-auto">
                             <table className="w-full text-left">
@@ -555,30 +645,56 @@ const TeacherDashboard = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-sm">
-                                    {!isLoading && requests.length === 0 ? (
-                                        <tr>
-                                            <td colSpan="7">
-                                                <EmptyState
-                                                    icon={FileText}
-                                                    title={currentRequestEmptyState.title}
-                                                    message={currentRequestEmptyState.message}
-                                                />
-                                            </td>
-                                        </tr>
+                                    {isLoading ? (
+                                        <tr><td colSpan="7" className="p-12 text-center text-slate-500">Loading requests...</td></tr>
+                                    ) : filteredRequests.length === 0 ? (
+                                        <tr><td colSpan="7" className="p-12 text-center text-slate-500">No requests found.</td></tr>
                                     ) : (
-                                        requests.map((req) => (
+                                        filteredRequests.map((req) => (
                                             <tr key={req.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group">
-                                                <td className="p-5 font-mono text-slate-500">#{req.id.toString().slice(0, 4)}</td>
-                                                <td className="p-5">
-                                                    <div className="font-bold text-slate-900 dark:text-white">{req.users?.full_name || 'Student Name'}</div>
-                                                    <div className="text-xs text-slate-500">{req.users?.reg_no || 'REG2023'}</div>
+                                                <td className="p-5 font-mono text-slate-500">
+                                                    <HighlightText
+                                                        text={`#${req.id.toString().slice(0, 4)}`}
+                                                        query={searchQuery}
+                                                    />
                                                 </td>
                                                 <td className="p-5">
-                                                    <div className="text-slate-600 dark:text-slate-300">{req.subject_name || 'Subject Name'}</div>
-                                                    <div className="text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded inline-block mt-1">{req.subject_code}</div>
+                                                    <div className="font-bold text-slate-900 dark:text-white">
+                                                        <HighlightText
+                                                            text={req.users?.full_name || 'Student Name'}
+                                                            query={searchQuery}
+                                                        />
+                                                    </div>
+                                                    <div className="text-xs text-slate-500">
+                                                        <HighlightText
+                                                            text={req.users?.reg_no || 'REG2023'}
+                                                            query={searchQuery}
+                                                        />
+                                                    </div>
+                                                    {req.users?.email && (
+                                                        <div className="text-xs text-slate-400 mt-0.5">
+                                                            <HighlightText text={req.users.email} query={searchQuery} />
+                                                        </div>
+                                                    )}
                                                 </td>
                                                 <td className="p-5">
-                                                    <span className="px-2 py-1 rounded-full text-xs font-bold bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20">PAID</span>
+                                                    <div className="text-slate-600 dark:text-slate-300">
+                                                        <HighlightText
+                                                            text={req.subject_name || 'Subject Name'}
+                                                            query={searchQuery}
+                                                        />
+                                                    </div>
+                                                    <div className="text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded inline-block mt-1">
+                                                        <HighlightText text={req.subject_code} query={searchQuery} />
+                                                    </div>
+                                                </td>
+                                                <td className="p-5">
+                                                    <span className={`px-2 py-1 rounded-full text-xs font-bold border ${(req.payment_status || 'Paid').toLowerCase() === 'paid'
+                                                        ? 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20'
+                                                        : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                                                        }`}>
+                                                        {(req.payment_status || 'Paid').toUpperCase()}
+                                                    </span>
                                                 </td>
                                                 <td className="p-5 text-slate-500 dark:text-slate-400 italic">
                                                     {req.ai_feedback ? (
@@ -850,12 +966,17 @@ const GradingWorkspace = ({ request, onClose, onPublish, onAIUpdate, getAuthHead
 
 const StatusBadge = ({ status }) => {
     const styles = {
-        'SUBMITTED': 'text-blue-600 dark:text-blue-400 border-blue-500/20 bg-blue-500/10',
-        'PROCESSING': 'text-amber-600 dark:text-amber-400 border-amber-500/20 bg-amber-500/10',
-        'TEACHER_REVIEW': 'text-purple-600 dark:text-purple-400 border-purple-500/20 bg-purple-500/10',
-        'PUBLISHED': 'text-emerald-600 dark:text-emerald-400 border-emerald-500/20 bg-emerald-500/10',
+        SUBMITTED: 'text-blue-600 dark:text-blue-400 border-blue-500/20 bg-blue-500/10',
+        PROCESSING: 'text-amber-600 dark:text-amber-400 border-amber-500/20 bg-amber-500/10',
+        TEACHER_REVIEW: 'text-indigo-600 dark:text-indigo-400 border-indigo-500/20 bg-indigo-500/10',
+        PUBLISHED: 'text-emerald-600 dark:text-emerald-400 border-emerald-500/20 bg-emerald-500/10',
     };
-    return <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase border ${styles[status] || styles.SUBMITTED}`}>{status}</span>;
+    const label = STATUS_LABELS[status] || status;
+    return (
+        <span className={`px-2 py-1 rounded-full text-xs font-semibold border ${styles[status] || styles.SUBMITTED}`}>
+            {label}
+        </span>
+    );
 };
 
 const StatsCard = ({ title, value, icon, color }) => {

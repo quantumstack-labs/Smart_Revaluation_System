@@ -14,6 +14,7 @@ const studentProfileRoutes = require('./routes/studentProfileRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
 const teacherProfileRoutes = require('./routes/teacherProfileRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const revaluationSearchRoutes = require('./routes/revaluationSearchRoutes');
 const revaluationRoutes = require('./routes/revaluationRoutes');
 const teacherKeyRoutes = require('./routes/teacherKeyRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
@@ -126,6 +127,7 @@ app.use('/api/teacher', teacherRoutes);
 app.use('/api/teacher', teacherProfileRoutes); // Profile routes for teachers
 app.use('/api/teacher', teacherKeyRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/revaluation-requests', revaluationSearchRoutes);
 
 // Direct Route for AI Grading
 app.post('/api/teacher/grade', protect, teacherOnly, aiController.gradeRequest);

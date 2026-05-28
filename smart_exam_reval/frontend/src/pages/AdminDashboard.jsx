@@ -1,7 +1,20 @@
-import React, { useState, useEffect,useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { supabase } from '../supabase';
-import api from '../api/axios'; // Centralized API client with global token interceptor
-import { User, BookOpen, Plus, Trash2, Search, Shield, Building, Upload, FileText, Edit2, LayoutDashboard, Users, X } from 'lucide-react';
+import api from '../api/axios';
+import { mapRevaluationRequests } from '../utils/mapRevaluationRequests';
+import RevaluationRequestFilters from '../components/RevaluationRequestFilters';
+import HighlightText from '../components/HighlightText';
+import RequestStatusBadge from '../components/RequestStatusBadge';
+import {
+    DEPARTMENT_CODES,
+    DEFAULT_PAGE_SIZE,
+    buildSubjectOptionsFromRows,
+    buildFilterParamsFromState,
+} from '../constants/revaluationFilters';
+import {
+    BookOpen, Plus, Trash2, Search, Shield, Building, Upload, FileText,
+    LayoutDashboard, Users, X, Clock,
+} from 'lucide-react';
 
 import toast from 'react-hot-toast';
 
@@ -16,16 +29,126 @@ const AdminDashboard = () => {
     // Data States
     const [faculty, setFaculty] = useState([]);
     const [subjects, setSubjects] = useState([]);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [departmentFilter, setDepartmentFilter] = useState('All');
+    const [facultySearchQuery, setFacultySearchQuery] = useState('');
+    const [facultyDepartmentFilter, setFacultyDepartmentFilter] = useState('All');
+
+    // Revaluation request list (admin dashboard)
+    const [allRequests, setAllRequests] = useState([]);
+    const [requestsLoading, setRequestsLoading] = useState(false);
+    const [requestSearchQuery, setRequestSearchQuery] = useState('');
+    const [selectedDepartment, setSelectedDepartment] = useState('All');
+    const [selectedPayment, setSelectedPayment] = useState('All');
+    const [selectedStatus, setSelectedStatus] = useState('All');
+    const [selectedSubject, setSelectedSubject] = useState('All');
+    const [dateFrom, setDateFrom] = useState('');
+    const [dateTo, setDateTo] = useState('');
+    const [page, setPage] = useState(1);
+    const [pagination, setPagination] = useState({
+        page: 1,
+        limit: DEFAULT_PAGE_SIZE,
+        total: 0,
+        totalPages: 1,
+    });
+    const [bulkUploading, setBulkUploading] = useState(false);
 
     // Form States
-    const [newFaculty, setNewFaculty] = useState({ email: '', full_name: '', department: 'CSE', password: '' });
-    const [newSubject, setNewSubject] = useState({ code: '', name: '', department: 'CSE' });
+    const [newFaculty, setNewFaculty] = useState({ email: '', full_name: '', department: 'CS', password: '' });
+    const [newSubject, setNewSubject] = useState({ code: '', name: '', department: 'CS' });
 
     useEffect(() => {
-        fetchData();
+        if (activeView === 'faculty') {
+            fetchData();
+        }
     }, [activeView, subView]);
+
+    useEffect(() => {
+        if (activeView !== 'dashboard') return;
+
+        const delay = requestSearchQuery.trim() ? 300 : 0;
+        const timer = setTimeout(() => fetchRevaluationRequests(), delay);
+        return () => clearTimeout(timer);
+    }, [activeView, requestSearchQuery, selectedDepartment, selectedPayment, selectedStatus, selectedSubject, dateFrom, dateTo, page]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [requestSearchQuery, selectedDepartment, selectedPayment, selectedStatus, selectedSubject, dateFrom, dateTo]);
+
+    const subjectOptions = useMemo(
+        () => buildSubjectOptionsFromRows(allRequests),
+        [allRequests]
+    );
+
+    const filterState = useMemo(
+        () => ({
+            search: requestSearchQuery,
+            department: selectedDepartment,
+            payment: selectedPayment,
+            status: selectedStatus,
+            subject: selectedSubject,
+            dateFrom,
+            dateTo,
+            page,
+            limit: DEFAULT_PAGE_SIZE,
+        }),
+        [
+            requestSearchQuery,
+            selectedDepartment,
+            selectedPayment,
+            selectedStatus,
+            selectedSubject,
+            dateFrom,
+            dateTo,
+            page,
+        ]
+    );
+
+    const buildRevaluationApiParams = () => buildFilterParamsFromState(filterState);
+
+    const fetchRevaluationRequests = async () => {
+        setRequestsLoading(true);
+        try {
+            const response = await api.get('/api/admin/revaluation-requests', {
+                params: buildRevaluationApiParams(),
+            });
+            const raw = response.data?.revaluation_requests ?? [];
+            setAllRequests(mapRevaluationRequests(raw));
+            setPagination(
+                response.data?.pagination ?? {
+                    page: 1,
+                    limit: DEFAULT_PAGE_SIZE,
+                    total: response.data?.total ?? raw.length,
+                    totalPages: 1,
+                }
+            );
+        } catch (err) {
+            console.error('Admin requests fetch error:', err);
+            toast.error('Failed to load revaluation requests');
+        } finally {
+            setRequestsLoading(false);
+        }
+    };
+
+    const handleBulkUpload = async () => {
+        if (!selectedFile) {
+            toast.error('Choose a CSV or Excel file first');
+            return;
+        }
+        setBulkUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            const response = await api.post('/api/admin/upload-semester-results', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+            toast.success(response.data?.message || 'Upload received');
+            setSelectedFile(null);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Upload failed');
+        } finally {
+            setBulkUploading(false);
+        }
+    };
 
     const fetchData = async () => {
         setLoading(true);
@@ -61,7 +184,7 @@ const AdminDashboard = () => {
             const response = await api.post('/api/admin/create-teacher', newFaculty);
 
             toast.success("Faculty account created successfully!");
-            setNewFaculty({ email: '', full_name: '', department: 'CSE', password: '' });
+            setNewFaculty({ email: '', full_name: '', department: 'CS', password: '' });
             setShowModal(false);
             fetchData();
         } catch (error) {
@@ -82,7 +205,7 @@ const AdminDashboard = () => {
             }]);
             if (error) throw error;
             toast.success("Subject added successfully!");
-            setNewSubject({ code: '', name: '', department: 'CSE' });
+            setNewSubject({ code: '', name: '', department: 'CS' });
             setShowModal(false);
             fetchData();
         } catch (error) {
@@ -103,18 +226,53 @@ const AdminDashboard = () => {
     };
 
     const filteredFaculty = faculty.filter(item => {
-        const matchesSearch = item.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.email?.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesDept = departmentFilter === 'All' || item.department === departmentFilter;
+        const matchesSearch = item.full_name?.toLowerCase().includes(facultySearchQuery.toLowerCase()) ||
+            item.email?.toLowerCase().includes(facultySearchQuery.toLowerCase());
+        const matchesDept = facultyDepartmentFilter === 'All' || item.department === facultyDepartmentFilter;
         return matchesSearch && matchesDept;
     });
 
     const filteredSubjects = subjects.filter(item => {
-        const matchesSearch = item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.code?.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesDept = departmentFilter === 'All' || item.department === departmentFilter;
+        const matchesSearch = item.name?.toLowerCase().includes(facultySearchQuery.toLowerCase()) ||
+            item.code?.toLowerCase().includes(facultySearchQuery.toLowerCase());
+        const matchesDept = facultyDepartmentFilter === 'All' || item.department === facultyDepartmentFilter;
         return matchesSearch && matchesDept;
     });
+
+    const filteredRequests = allRequests;
+
+    const hasActiveRequestFilters =
+        requestSearchQuery.trim() !== '' ||
+        selectedDepartment !== 'All' ||
+        selectedPayment !== 'All' ||
+        selectedStatus !== 'All' ||
+        selectedSubject !== 'All' ||
+        dateFrom !== '' ||
+        dateTo !== '';
+
+    const clearRequestFilters = () => {
+        setRequestSearchQuery('');
+        setSelectedDepartment('All');
+        setSelectedPayment('All');
+        setSelectedStatus('All');
+        setSelectedSubject('All');
+        setDateFrom('');
+        setDateTo('');
+        setPage(1);
+    };
+
+    const totalCount = pagination.total ?? filteredRequests.length;
+    const requestResultLabel =
+        totalCount === 1 ? '1 record found' : `${totalCount} records found`;
+
+    const formatRequestDate = (value) => {
+        if (!value) return '—';
+        try {
+            return new Date(value).toLocaleDateString();
+        } catch {
+            return '—';
+        }
+    };
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
@@ -149,18 +307,148 @@ const AdminDashboard = () => {
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
                 {activeView === 'dashboard' ? (
-                    <div>
-                        {/* Header */}
-                        <div className="mb-8">
+                    <div className="space-y-8">
+                        <div>
                             <div className="flex items-center gap-3 mb-2">
                                 <Shield className="h-6 w-6 text-red-600 dark:text-red-500" />
                                 <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Admin Portal (COE)</h1>
                             </div>
-                            <p className="text-slate-500 dark:text-slate-400">Controller of Examinations Dashboard. Manage semester results and university-wide settings.</p>
+                            <p className="text-slate-500 dark:text-slate-400">
+                                Search and filter revaluation requests across the university. Upload semester results below.
+                            </p>
+                        </div>
+
+                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm dark:shadow-none">
+                            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Revaluation Requests</h2>
+                            <RevaluationRequestFilters
+                                role="admin"
+                                showDateRange
+                                searchQuery={requestSearchQuery}
+                                onSearchChange={setRequestSearchQuery}
+                                selectedDepartment={selectedDepartment}
+                                onDepartmentChange={setSelectedDepartment}
+                                selectedPayment={selectedPayment}
+                                onPaymentChange={setSelectedPayment}
+                                selectedStatus={selectedStatus}
+                                onStatusChange={setSelectedStatus}
+                                selectedSubject={selectedSubject}
+                                onSubjectChange={setSelectedSubject}
+                                subjectOptions={subjectOptions}
+                                dateFrom={dateFrom}
+                                onDateFromChange={setDateFrom}
+                                dateTo={dateTo}
+                                onDateToChange={setDateTo}
+                                onClear={hasActiveRequestFilters ? clearRequestFilters : undefined}
+                                resultLabel={requestResultLabel}
+                                page={pagination.page}
+                                totalPages={pagination.totalPages}
+                                onPageChange={setPage}
+                            />
+
+                            <div className="mt-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm dark:shadow-none overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400 text-xs uppercase font-bold tracking-wider">
+                                        <tr>
+                                            <th className="p-4">Request ID</th>
+                                            <th className="p-4">Student</th>
+                                            <th className="p-4">Subject</th>
+                                            <th className="p-4">Department</th>
+                                            <th className="p-4">Payment</th>
+                                            <th className="p-4">Status</th>
+                                            <th className="p-4">Submitted</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-sm">
+                                        {requestsLoading ? (
+                                            <tr>
+                                                <td colSpan="7" className="p-12 text-center text-slate-500">
+                                                    Loading requests...
+                                                </td>
+                                            </tr>
+                                        ) : filteredRequests.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="7" className="p-12 text-center text-slate-500">
+                                                    No requests found.
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            filteredRequests.map((req) => (
+                                                <tr
+                                                    key={req.id}
+                                                    className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
+                                                >
+                                                    <td className="p-4 font-mono text-slate-500">
+                                                        <HighlightText
+                                                            text={`#${String(req.id).slice(0, 6)}`}
+                                                            query={requestSearchQuery}
+                                                        />
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <div className="font-medium text-slate-900 dark:text-white">
+                                                            <HighlightText
+                                                                text={req.users?.full_name || req.student_name}
+                                                                query={requestSearchQuery}
+                                                            />
+                                                        </div>
+                                                        <div className="text-xs text-slate-500">
+                                                            <HighlightText
+                                                                text={req.users?.reg_no}
+                                                                query={requestSearchQuery}
+                                                            />
+                                                        </div>
+                                                        {req.users?.email && (
+                                                            <div className="text-xs text-slate-400 mt-0.5">
+                                                                <HighlightText
+                                                                    text={req.users.email}
+                                                                    query={requestSearchQuery}
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <div className="text-slate-700 dark:text-slate-300">
+                                                            <HighlightText
+                                                                text={req.subject_name}
+                                                                query={requestSearchQuery}
+                                                            />
+                                                        </div>
+                                                        <span className="text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded inline-block mt-1">
+                                                            <HighlightText
+                                                                text={req.subject_code}
+                                                                query={requestSearchQuery}
+                                                            />
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-4 text-slate-600 dark:text-slate-300">
+                                                        {req.users?.department ?? req.student_department ?? '—'}
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <span
+                                                            className={`px-2 py-1 rounded-full text-xs font-bold border ${
+                                                                (req.payment_status || 'Paid').toLowerCase() === 'paid'
+                                                                    ? 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20'
+                                                                    : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                                                            }`}
+                                                        >
+                                                            {(req.payment_status || 'Paid').toUpperCase()}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <RequestStatusBadge status={req.status} />
+                                                    </td>
+                                                    <td className="p-4 text-slate-500 whitespace-nowrap">
+                                                        {formatRequestDate(req.created_at)}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
 
                         {/* Bulk Upload Card */}
-                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 max-w-3xl shadow-sm dark:shadow-none">
+                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-sm dark:shadow-none">
                             <div className="flex items-center gap-3 mb-6">
                                 <FileText className="h-6 w-6 text-blue-600 dark:text-blue-500" />
                                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">Bulk Upload Semester Results</h2>
@@ -197,9 +485,14 @@ const AdminDashboard = () => {
                             </div>
                             <p className="text-xs text-slate-500 mt-2 mb-6">Supported formats: .xlsx, .xls, .csv</p>
 
-                            <button className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-600/20">
+                            <button
+                                type="button"
+                                onClick={handleBulkUpload}
+                                disabled={bulkUploading || !selectedFile}
+                                className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-600/20"
+                            >
                                 <Upload className="h-5 w-5" />
-                                Upload & Process Results
+                                {bulkUploading ? 'Uploading...' : 'Upload & Process Results'}
                             </button>
                         </div>
                     </div>
@@ -243,18 +536,18 @@ const AdminDashboard = () => {
                                 <input
                                     type="text"
                                     placeholder={`Search ${subView}...`}
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    value={facultySearchQuery}
+                                    onChange={(e) => setFacultySearchQuery(e.target.value)}
                                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
                                 />
                             </div>
 
                             <div className="flex gap-2 bg-slate-50 dark:bg-slate-950 p-1 rounded-lg border border-slate-200 dark:border-slate-800">
-                                {['All', 'CSE', 'ECE', 'Math'].map(dept => (
+                                {DEPARTMENT_CODES.map(dept => (
                                     <button
                                         key={dept}
-                                        onClick={() => setDepartmentFilter(dept)}
-                                        className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${departmentFilter === dept
+                                        onClick={() => setFacultyDepartmentFilter(dept)}
+                                        className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${facultyDepartmentFilter === dept
                                             ? 'bg-indigo-600 text-white shadow-lg'
                                             : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800'
                                             }`}
@@ -407,7 +700,7 @@ const AdminDashboard = () => {
                                         value={newFaculty.department}
                                         onChange={e => setNewFaculty({ ...newFaculty, department: e.target.value })}
                                         className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
-                                        placeholder="Enter Department (e.g., CSE)"
+                                        placeholder="Enter Department (e.g., CS)"
                                     />
                                 </div>
                                 <div>
@@ -459,7 +752,7 @@ const AdminDashboard = () => {
                                             value={newSubject.department}
                                             onChange={e => setNewSubject({ ...newSubject, department: e.target.value })}
                                             className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
-                                            placeholder="Enter Department (e.g., CSE)"
+                                            placeholder="Enter Department (e.g., CS)"
                                         />
                                     </div>
                                 <button className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition-colors mt-2">

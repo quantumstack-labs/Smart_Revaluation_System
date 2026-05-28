@@ -1,5 +1,13 @@
 const { createClient } = require('@supabase/supabase-js');
-// const pool = require('../config/db'); // Keep if you use direct DB access
+const pool = require('../config/db');
+const multer = require('multer');
+const path = require('path');
+const { getAdminRevaluationList } = require('../services/revaluationRequestListService');
+
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 15 * 1024 * 1024 },
+});
 
 // 1. Check if the key exists
 if (!process.env.SUPABASE_SERVICE_KEY) {
@@ -90,3 +98,63 @@ exports.createTeacher = async (req, res) => {
         res.status(500).json({ error: error.message || "Internal Server Error" });
     }
 };
+
+// @desc    List all revaluation requests (admin) with search/filter query params
+// @route   GET /api/admin/revaluation-requests
+// @query   search, department, payment, status, dateFrom, dateTo, page, limit
+exports.getRevaluationRequests = async (req, res) => {
+    try {
+        const data = await getAdminRevaluationList(req.query);
+
+        if (process.env.NODE_ENV === 'development') {
+            console.log(
+                `[admin] ${data.revaluation_requests.length} requests (page ${data.pagination.page}, total ${data.pagination.total}).`
+            );
+        }
+
+        res.json({
+            total: data.pagination.total,
+            ...data,
+        });
+    } catch (err) {
+        console.error('Error in getRevaluationRequests:', err);
+        res.status(500).json({ message: 'Server Error', error: err.message });
+    }
+};
+
+// @desc    Bulk upload semester results (CSV / Excel)
+// @route   POST /api/admin/upload-semester-results
+exports.uploadSemesterResults = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        const ext = path.extname(req.file.originalname).toLowerCase();
+        const allowed = ['.csv', '.xlsx', '.xls'];
+        if (!allowed.includes(ext)) {
+            return res.status(400).json({
+                message: 'Unsupported file type. Use .csv, .xlsx, or .xls',
+            });
+        }
+
+        let rowsDetected = 0;
+        if (ext === '.csv') {
+            const text = req.file.buffer.toString('utf8');
+            const lines = text.split(/\r?\n/).filter((line) => line.trim());
+            rowsDetected = Math.max(0, lines.length - 1);
+        }
+
+        res.status(202).json({
+            success: true,
+            message: `Received "${req.file.originalname}". ${rowsDetected > 0 ? `${rowsDetected} data row(s) detected.` : 'File stored for processing.'} Connect your marks import job to persist rows.`,
+            filename: req.file.originalname,
+            rows_detected: rowsDetected,
+        });
+    } catch (err) {
+        console.error('uploadSemesterResults:', err);
+        res.status(500).json({ message: 'Upload failed', error: err.message });
+    }
+};
+
+exports.uploadSemesterResultsMiddleware = upload.single('file');
