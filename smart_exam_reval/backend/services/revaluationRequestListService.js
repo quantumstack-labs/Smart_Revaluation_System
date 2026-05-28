@@ -168,10 +168,12 @@ async function getAdminRevaluationList(query) {
 }
 
 async function searchByRole(user, query) {
-    if (user.role === "admin") {
+    const role = String(user?.role || "").toLowerCase();
+
+    if (role === "admin") {
         return { scope: "admin", ...(await getAdminRevaluationList(query)) };
     }
-    if (user.role === "teacher") {
+    if (role === "teacher") {
         const data = await getTeacherDashboardList(user.id, query);
         if (data.error) return data;
         return { scope: "teacher", ...data };
