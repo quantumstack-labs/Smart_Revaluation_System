@@ -4,9 +4,11 @@ const upload = require("../utils/fileUpload");
 const pool = require("../config/db");
 const { ocrQueue } = require("../utils/queues");
 const path = require("path");
+const validateFileSignature =
+require("../middleware/validateFileSignature");
 
 // POST /api/upload/answer-sheet
-router.post("/answer-sheet", upload.array("files", 5), async (req, res) => {
+router.post("/answer-sheet", upload.array("files", 5), validateFileSignature, async (req, res) => {
     try {
         const { requestId } = req.body;
         const files = req.files;
