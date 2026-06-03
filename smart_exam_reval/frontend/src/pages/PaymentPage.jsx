@@ -244,7 +244,7 @@ const PaymentPage = () => {
                                 </p>
                                 <div className="flex justify-center gap-4">
                                     <button
-                                        onClick={() => navigate('/check-status')}
+                                        onClick={() => navigate('/track-status')}
                                         className="px-6 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-bold transition-all"
                                     >
                                         Track Status
