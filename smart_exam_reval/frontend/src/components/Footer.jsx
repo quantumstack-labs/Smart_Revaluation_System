@@ -23,8 +23,8 @@ const Footer = () => {
                         <ul className="space-y-2">
                             <li><Link to="/home" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Home</Link></li>
                             <li><Link to="/track-status" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Check Status</Link></li>
-                            <li><Link to="/login" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Login</Link></li>
-                            <li><Link to="/signup" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Sign Up</Link></li>
+                            <li><Link to="/login" onClick={()=>window.scrollTo(0,0)} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Login</Link></li>
+                            <li><Link to="/signup" onClick={()=>window.scrollTo(0,0)} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Sign Up</Link></li>
                         </ul>
                     </div>
 
