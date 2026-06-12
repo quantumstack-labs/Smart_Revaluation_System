@@ -7,7 +7,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 import LoadingSpinner from './components/LoadingSpinner';
 
-// Pages
+
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -31,7 +31,7 @@ function App() {
     <AuthProvider>
       <ThemeProvider>
         <Router>
-          {/* Toast Container for global notifications */}
+      
           <Toaster
             position="top-right"
             toastOptions={{
@@ -44,7 +44,7 @@ function App() {
 
           <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950"><LoadingSpinner /></div>}>
             <Routes>
-              {/* Public Routes */}
+    
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
@@ -64,7 +64,7 @@ function App() {
                 }
               />
 
-              {/* Student Protected Routes */}
+     
               <Route
                 path="/student/dashboard"
                 element={
@@ -92,7 +92,7 @@ function App() {
                 }
               />
 
-              {/* Teacher Protected Routes */}
+
               <Route
                 path="/teacher/dashboard"
                 element={
@@ -104,7 +104,7 @@ function App() {
                 }
               />
 
-              {/* Admin Protected Routes */}
+ 
               <Route
                 path="/admin/dashboard"
                 element={
@@ -116,7 +116,6 @@ function App() {
                 }
               />
 
-              {/* Fallback for unknown routes */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </React.Suspense>
