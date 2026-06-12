@@ -1,7 +1,7 @@
 export const formatDate = (dateString) => {
     const date = new Date(dateString);
     if (isNaN(date)) {
-        return ''; // or return some default like 'Invalid date'
+        return ''; 
     }
     return date.toLocaleDateString('en-US', {
         year: 'numeric',
@@ -12,7 +12,7 @@ export const formatDate = (dateString) => {
 
 export const formatCurrency = (amount) => {
     if (typeof amount !== 'number' || isNaN(amount)) {
-        return ''; // or return some default like '₹0.00'
+        return '';
     }
     return new Intl.NumberFormat('en-IN', {
         style: 'currency',
