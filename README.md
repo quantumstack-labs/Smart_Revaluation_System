@@ -12,7 +12,7 @@
 
 ##  Overview
 
-**ReValuate** is an advanced EdTech platform that transforms the traditional exam revaluation process using AI-powered analysis. The system provides transparent, fast, and fair reassessment of student answer scripts through a combination of Google Gemini AI vision models and expert faculty review.
+**ReValuate** is a platform that transforms the traditional exam revaluation process using AI-powered analysis. The system provides transparent, fast, and fair reassessment of student answer scripts through a combination of Google Gemini AI vision models and expert faculty review.
 
 ##  Deployment Status
 
