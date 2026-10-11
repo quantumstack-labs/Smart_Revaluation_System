@@ -116,8 +116,8 @@ Unlike manual revaluation systems that take weeks, ReValuate delivers:
 
 ```bash
 # Clone the repository
-git clone https://github.com/quantumstack-labs/Smart_Revaluation_System.git
-cd revaluate
+git clone [https://github.com/quantumstack-labs/Smart_Revaluation_System.git](https://github.com/quantumstack-labs/Smart_Revaluation_System.git)
+cd Smart_Revaluation_System
 
 # Install backend dependencies
 cd backend
